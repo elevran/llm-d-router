@@ -21,9 +21,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
-          # re-fetch labels; github.event.pull_request.labels is stale on rerun
+          blocking_labels=(hold do-not-merge/hold)
+
+          # fetch current labels
           labels=$(gh pr view "$PR_URL" --json labels -q '.labels[].name')
-          if grep -qxE 'hold|do-not-merge/hold' <<< "$labels"; then
-            echo "::error::A hold label is present (hold or do-not-merge/hold). Remove it (/hold cancel) to allow merge."
-            exit 1
-          fi
+          for label in "${blocking_labels[@]}"; do
+            if grep -qxF "$label" <<< "$labels"; then
+              echo "::error::A hold label is present (hold or do-not-merge/hold). Remove it (/hold cancel) to allow merge."
+              exit 1
+            fi
+          done
