@@ -27,7 +27,12 @@ jobs:
           labels=$(gh pr view "$PR_URL" --json labels -q '.labels[].name')
           for label in "${blocking_labels[@]}"; do
             if grep -qxF "$label" <<< "$labels"; then
-              echo "::error::A hold label is present (hold or do-not-merge/hold). Remove it (/hold cancel) to allow merge."
+              if [ "$label" = hold ]; then
+                howto="run /hold cancel"
+              else
+                howto="remove it from the PR"
+              fi
+              echo "::error::Blocking label '$label' is present. To allow merge, $howto."
               exit 1
             fi
           done
