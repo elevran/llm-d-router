@@ -1,10 +1,6 @@
 # Fails a required check while a hold label is present, so /hold (label `hold`)
 # and the release-branch auto-hold (label `do-not-merge/hold`) block
 # GitHub-native auto-merge. Re-runs on label changes.
-#
-# Queries current labels via the API rather than github.event.pull_request.labels:
-# that field is frozen at trigger time, so a manual rerun of a stale failed run
-# would otherwise keep failing even after the hold label is removed.
 
 name: Hold gate
 
@@ -25,6 +21,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
+          # re-fetch labels; github.event.pull_request.labels is stale on rerun
           labels=$(gh pr view "$PR_URL" --json labels -q '.labels[].name')
           if grep -qxE 'hold|do-not-merge/hold' <<< "$labels"; then
             echo "::error::A hold label is present (hold or do-not-merge/hold). Remove it (/hold cancel) to allow merge."
