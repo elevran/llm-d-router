@@ -1,0 +1,53 @@
+/*
+Copyright 2026 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package topology
+
+import (
+	fwkdl "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/datalayer"
+	fwksched "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/scheduling"
+	attrtopology "github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/datalayer/attribute/topology"
+)
+
+// PeerTopology returns the topology of the endpoint selected in the peer
+// scheduling phase, or false when no peer topology is available.
+//
+// Single EPP: disagg-profile-handler publishes the peer Endpoint as the
+// scheduling.PeerEndpointAttributeKey request attribute before running the
+// prefill profile; its Topology attribute (dataKey) is read directly.
+//
+// Coordinator, separate P/D EPPs: the peer's topology arrives encoded on
+// header (a request header set by the prefill-side response stamper).
+// Header decoding is not yet implemented; a configured header always
+// returns false until that support lands.
+//
+// The request attribute takes precedence when both are present.
+func PeerTopology(request *fwksched.InferenceRequest, dataKey, header string) (*attrtopology.Topology, bool) {
+	if request == nil {
+		return nil, false
+	}
+	if peer, ok := fwksched.ReadRequestAttribute[fwksched.Endpoint](request, fwksched.PeerEndpointAttributeKey); ok && peer != nil {
+		if topo, ok := fwkdl.ReadAttribute[*attrtopology.Topology](peer, dataKey); ok {
+			return topo, true
+		}
+	}
+	if header == "" {
+		return nil, false
+	}
+	// TODO: decode request.Headers[header]. Header-based peer topology is not
+	// wired up until the coordinator response stamper lands.
+	return nil, false
+}

@@ -331,6 +331,9 @@ func (h *Handler) Pick(ctx context.Context, request *scheduling.InferenceRequest
 	if _, hasPrefillProfile := profiles[h.prefillProfile]; hasPrefillProfile {
 		if _, executed := profileResults[h.prefillProfile]; !executed {
 			if h.pdDecider != nil && h.pdDecider.disaggregate(ctx, request, decodeRes.TargetEndpoints[0]) {
+				// Publish the decode pick so plugins in the prefill profile (e.g.
+				// topology affinity) can compare candidates against it.
+				request.PutAttribute(scheduling.PeerEndpointAttributeKey, decodeRes.TargetEndpoints[0])
 				span.SetAttributes(attribute.String("llm_d.epp.profile_handler.decision", "run_prefill"))
 				return map[string]scheduling.SchedulerProfile{h.prefillProfile: profiles[h.prefillProfile]}
 			}

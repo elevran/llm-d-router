@@ -1,0 +1,70 @@
+/*
+Copyright 2026 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package topology
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/types"
+
+	fwkdl "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/datalayer"
+	fwksched "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/scheduling"
+	attrtopology "github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/datalayer/attribute/topology"
+)
+
+func TestPeerTopology_NilRequest(t *testing.T) {
+	_, ok := PeerTopology(nil, attrtopology.TopologyAttributeKey.String(), "")
+	assert.False(t, ok)
+}
+
+func TestPeerTopology_NoPeerAttributeNoHeader(t *testing.T) {
+	req := &fwksched.InferenceRequest{}
+	_, ok := PeerTopology(req, attrtopology.TopologyAttributeKey.String(), "")
+	assert.False(t, ok)
+}
+
+func TestPeerTopology_FromPeerEndpointAttribute(t *testing.T) {
+	meta := &fwkdl.EndpointMetadata{ID: types.NamespacedName{Name: "peer", Namespace: "default"}}
+	peerEndpoint := fwksched.NewEndpoint(meta, &fwkdl.Metrics{}, fwkdl.NewAttributes())
+	topo := &attrtopology.Topology{Hostname: "h1"}
+	peerEndpoint.Put(attrtopology.TopologyAttributeKey.String(), topo)
+
+	req := &fwksched.InferenceRequest{}
+	req.PutAttribute(fwksched.PeerEndpointAttributeKey, peerEndpoint)
+
+	got, ok := PeerTopology(req, attrtopology.TopologyAttributeKey.String(), "")
+	assert.True(t, ok)
+	assert.Equal(t, topo, got)
+}
+
+func TestPeerTopology_PeerEndpointMissingTopologyAttribute(t *testing.T) {
+	meta := &fwkdl.EndpointMetadata{ID: types.NamespacedName{Name: "peer", Namespace: "default"}}
+	peerEndpoint := fwksched.NewEndpoint(meta, &fwkdl.Metrics{}, fwkdl.NewAttributes())
+
+	req := &fwksched.InferenceRequest{}
+	req.PutAttribute(fwksched.PeerEndpointAttributeKey, peerEndpoint)
+
+	_, ok := PeerTopology(req, attrtopology.TopologyAttributeKey.String(), "")
+	assert.False(t, ok)
+}
+
+func TestPeerTopology_HeaderNotYetImplemented(t *testing.T) {
+	req := &fwksched.InferenceRequest{Headers: map[string]string{"x-peer-topology": "host=h1"}}
+	_, ok := PeerTopology(req, attrtopology.TopologyAttributeKey.String(), "x-peer-topology")
+	assert.False(t, ok, "header decoding lands in PR 2")
+}
