@@ -78,6 +78,16 @@ func TestScorer_LevelCurve(t *testing.T) {
 	assert.Equal(t, 0.00, got[noMatch])
 }
 
+func TestScorer_SparseCandidateScoresAtItsOnlyPopulatedLevel(t *testing.T) {
+	peerTopo := &attrtopology.Topology{Hostname: "h1", Rack: "r1", Zone: "z1", Region: "reg1"}
+	sameRackOnly := makeEndpoint(t, "same-rack-only", &attrtopology.Topology{Rack: "r1"})
+
+	s := newTestScorer()
+	req := requestWithPeer(peerTopo)
+	got := s.Score(context.Background(), req, []fwksched.Endpoint{sameRackOnly})
+	assert.Equal(t, 0.20, got[sameRackOnly], "candidate with only Rack set scores at rack, not host")
+}
+
 func TestScorer_AllZeroWhenNoPeerTopology(t *testing.T) {
 	endpoints := []fwksched.Endpoint{
 		makeEndpoint(t, "a", &attrtopology.Topology{Hostname: "h1"}),

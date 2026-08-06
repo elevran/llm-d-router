@@ -78,6 +78,20 @@ func TestFilter_KeepsOnlyMatchingMinAffinity(t *testing.T) {
 	require.Len(t, got, 2)
 }
 
+func TestFilter_SparseCandidateMatchesAtItsOnlyPopulatedLevel(t *testing.T) {
+	peerTopo := &attrtopology.Topology{Hostname: "h1", Rack: "r1", Zone: "z1", Region: "reg1"}
+	sameRackOnly := makeEndpoint(t, "same-rack-only", &attrtopology.Topology{Rack: "r1"})
+
+	f := newTestFilter(topoutil.LevelRack)
+	req := requestWithPeer(peerTopo)
+	got := f.Filter(context.Background(), req, []fwksched.Endpoint{sameRackOnly})
+	require.Len(t, got, 1, "candidate with only Rack set still matches at rack")
+
+	f = newTestFilter(topoutil.LevelHost)
+	got = f.Filter(context.Background(), req, []fwksched.Endpoint{sameRackOnly})
+	require.Len(t, got, 1, "fails open: rack-only match does not meet host floor")
+}
+
 func TestFilter_FailsOpenWhenNoCandidateMatches(t *testing.T) {
 	peerTopo := &attrtopology.Topology{Hostname: "h1"}
 	noMatch := makeEndpoint(t, "no-match", &attrtopology.Topology{Hostname: "h2"})

@@ -52,6 +52,8 @@ func TestCompare(t *testing.T) {
 		{"no common tier", full, &attrtopology.Topology{Hostname: "h2", Rack: "r2", Zone: "z2", Region: "reg2"}, LevelNone},
 		{"empty vs empty never matches", &attrtopology.Topology{}, &attrtopology.Topology{}, LevelNone},
 		{"missing field on candidate does not match", full, &attrtopology.Topology{Rack: "r1", Zone: "z1", Region: "reg1"}, LevelRack},
+		{"candidate has only rack, matches at rack", full, &attrtopology.Topology{Rack: "r1"}, LevelRack},
+		{"candidate has only zone, matches at zone", full, &attrtopology.Topology{Zone: "z1"}, LevelZone},
 		{"nil peer", nil, full, LevelNone},
 		{"nil candidate", full, nil, LevelNone},
 		{"both nil", nil, nil, LevelNone},
