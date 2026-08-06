@@ -42,6 +42,7 @@ type parameters struct {
 }
 
 var _ fwksched.Filter = &Filter{}
+var _ fwkplugin.ConsumerPlugin = &Filter{}
 
 // Factory creates a topology affinity filter.
 func Factory(name string, rawParameters *json.Decoder, _ fwkplugin.Handle) (fwkplugin.Plugin, error) {
@@ -85,6 +86,16 @@ type Filter struct {
 
 func (f *Filter) TypedName() fwkplugin.TypedName {
 	return f.typedName
+}
+
+// Consumes returns the Topology attribute as optional: a missing producer
+// logs a startup warning rather than an error, since the filter fails open
+// (no peer topology means the candidates pass through unfiltered) rather
+// than depending on the attribute to function.
+func (f *Filter) Consumes() fwkplugin.DataDependencies {
+	return fwkplugin.DataDependencies{
+		Optional: map[fwkplugin.DataKey]any{f.dataKey: attrtopology.Topology{}},
+	}
 }
 
 func (f *Filter) Filter(_ context.Context, request *fwksched.InferenceRequest, endpoints []fwksched.Endpoint) []fwksched.Endpoint {

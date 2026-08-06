@@ -57,6 +57,7 @@ type parameters struct {
 }
 
 var _ fwksched.Scorer = &Scorer{}
+var _ fwkplugin.ConsumerPlugin = &Scorer{}
 
 // Factory creates a topology affinity scorer.
 func Factory(name string, rawParameters *json.Decoder, _ fwkplugin.Handle) (fwkplugin.Plugin, error) {
@@ -85,6 +86,16 @@ type Scorer struct {
 
 func (s *Scorer) TypedName() fwkplugin.TypedName {
 	return s.typedName
+}
+
+// Consumes returns the Topology attribute as optional: a missing producer
+// logs a startup warning rather than an error, since the scorer scores every
+// endpoint 0 (no signal, not an error) rather than depending on the
+// attribute to function.
+func (s *Scorer) Consumes() fwkplugin.DataDependencies {
+	return fwkplugin.DataDependencies{
+		Optional: map[fwkplugin.DataKey]any{s.dataKey: attrtopology.Topology{}},
+	}
 }
 
 func (s *Scorer) Category() fwksched.ScorerCategory {

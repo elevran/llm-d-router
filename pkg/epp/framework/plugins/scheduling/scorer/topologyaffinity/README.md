@@ -65,6 +65,10 @@ Reads the `Topology` attribute (`topology-extractor`) from the candidate endpoin
 from the peer endpoint. The peer endpoint is resolved from the `peer-endpoint` request
 attribute, published by `disagg-profile-handler` before running the `prefill` profile.
 
+Declares `Topology` as an optional data dependency: a config with no `topology-extractor`
+logs a startup warning rather than an error, since every candidate scores 0 when the
+attribute is absent.
+
 ## Configuration
 
 | Parameter               | Required | Default | Description                                                                  |

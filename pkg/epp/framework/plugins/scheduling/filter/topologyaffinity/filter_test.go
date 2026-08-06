@@ -125,6 +125,16 @@ func TestFilter_EndpointMissingAttributeIsDropped(t *testing.T) {
 	assert.Equal(t, "same-host", got[0].GetMetadata().ID.Name)
 }
 
+func TestFilter_Consumes(t *testing.T) {
+	f := newTestFilter(topoutil.LevelHost)
+
+	consumes := f.Consumes()
+
+	assert.Empty(t, consumes.Required)
+	require.Len(t, consumes.Optional, 1)
+	assert.Equal(t, attrtopology.Topology{}, consumes.Optional[f.dataKey])
+}
+
 func TestFactory_Defaults(t *testing.T) {
 	p, err := Factory("", nil, nil)
 	require.NoError(t, err)

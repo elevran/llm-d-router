@@ -116,6 +116,16 @@ func TestScorer_Category(t *testing.T) {
 	assert.Equal(t, fwksched.Affinity, s.Category())
 }
 
+func TestScorer_Consumes(t *testing.T) {
+	s := newTestScorer()
+
+	consumes := s.Consumes()
+
+	assert.Empty(t, consumes.Required)
+	require.Len(t, consumes.Optional, 1)
+	assert.Equal(t, attrtopology.Topology{}, consumes.Optional[s.dataKey])
+}
+
 func TestFactory_Defaults(t *testing.T) {
 	p, err := Factory("", nil, nil)
 	require.NoError(t, err)
