@@ -88,7 +88,7 @@ func (f *Filter) TypedName() fwkplugin.TypedName {
 }
 
 func (f *Filter) Filter(_ context.Context, request *fwksched.InferenceRequest, endpoints []fwksched.Endpoint) []fwksched.Endpoint {
-	peer, ok := topoutil.PeerTopology(request, f.dataKey.String(), "")
+	peer, ok := topoutil.PeerTopology(request, f.dataKey.String())
 	if !ok {
 		return endpoints
 	}

@@ -26,29 +26,18 @@ import (
 // PeerTopology returns the topology of the endpoint selected in the peer
 // scheduling phase, or false when no peer topology is available.
 //
-// Single EPP: disagg-profile-handler publishes the peer Endpoint as the
+// disagg-profile-handler publishes the peer Endpoint as the
 // disagg.PeerEndpointAttributeKey request attribute before running the
-// prefill profile; its Topology attribute (dataKey) is read directly.
-//
-// Coordinator, separate P/D EPPs: the peer's topology arrives encoded on
-// header (a request header set by the prefill-side response stamper).
-// Header decoding is not yet implemented; a configured header always
-// returns false until that support lands.
-//
-// The request attribute takes precedence when both are present.
-func PeerTopology(request *fwksched.InferenceRequest, dataKey, header string) (*attrtopology.Topology, bool) {
+// prefill profile; its Topology attribute (dataKey) is read directly. Scoped
+// to single-EPP deployments; coordinator deployments, where the peer's
+// topology arrives on a request header instead, are not yet supported.
+func PeerTopology(request *fwksched.InferenceRequest, dataKey string) (*attrtopology.Topology, bool) {
 	if request == nil {
 		return nil, false
 	}
-	if peer, ok := fwksched.ReadRequestAttribute[fwksched.Endpoint](request, disagg.PeerEndpointAttributeKey); ok && peer != nil {
-		if topo, ok := fwkdl.ReadAttribute[*attrtopology.Topology](peer, dataKey); ok {
-			return topo, true
-		}
-	}
-	if header == "" {
+	peer, ok := fwksched.ReadRequestAttribute[fwksched.Endpoint](request, disagg.PeerEndpointAttributeKey)
+	if !ok || peer == nil {
 		return nil, false
 	}
-	// TODO: decode request.Headers[header]. Header-based peer topology is not
-	// wired up until the coordinator response stamper lands.
-	return nil, false
+	return fwkdl.ReadAttribute[*attrtopology.Topology](peer, dataKey)
 }

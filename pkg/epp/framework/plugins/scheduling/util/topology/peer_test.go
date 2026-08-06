@@ -29,13 +29,13 @@ import (
 )
 
 func TestPeerTopology_NilRequest(t *testing.T) {
-	_, ok := PeerTopology(nil, attrtopology.TopologyAttributeKey.String(), "")
+	_, ok := PeerTopology(nil, attrtopology.TopologyAttributeKey.String())
 	assert.False(t, ok)
 }
 
-func TestPeerTopology_NoPeerAttributeNoHeader(t *testing.T) {
+func TestPeerTopology_NoPeerAttribute(t *testing.T) {
 	req := &fwksched.InferenceRequest{}
-	_, ok := PeerTopology(req, attrtopology.TopologyAttributeKey.String(), "")
+	_, ok := PeerTopology(req, attrtopology.TopologyAttributeKey.String())
 	assert.False(t, ok)
 }
 
@@ -48,7 +48,7 @@ func TestPeerTopology_FromPeerEndpointAttribute(t *testing.T) {
 	req := &fwksched.InferenceRequest{}
 	req.PutAttribute(disagg.PeerEndpointAttributeKey, peerEndpoint)
 
-	got, ok := PeerTopology(req, attrtopology.TopologyAttributeKey.String(), "")
+	got, ok := PeerTopology(req, attrtopology.TopologyAttributeKey.String())
 	assert.True(t, ok)
 	assert.Equal(t, topo, got)
 }
@@ -60,12 +60,6 @@ func TestPeerTopology_PeerEndpointMissingTopologyAttribute(t *testing.T) {
 	req := &fwksched.InferenceRequest{}
 	req.PutAttribute(disagg.PeerEndpointAttributeKey, peerEndpoint)
 
-	_, ok := PeerTopology(req, attrtopology.TopologyAttributeKey.String(), "")
+	_, ok := PeerTopology(req, attrtopology.TopologyAttributeKey.String())
 	assert.False(t, ok)
-}
-
-func TestPeerTopology_HeaderNotYetImplemented(t *testing.T) {
-	req := &fwksched.InferenceRequest{Headers: map[string]string{"x-peer-topology": "host=h1"}}
-	_, ok := PeerTopology(req, attrtopology.TopologyAttributeKey.String(), "x-peer-topology")
-	assert.False(t, ok, "header decoding lands in PR 2")
 }
