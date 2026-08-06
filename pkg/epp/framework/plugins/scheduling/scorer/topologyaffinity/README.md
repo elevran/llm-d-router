@@ -29,7 +29,19 @@ zone, and region), using a fixed proximity curve:
 
 The curve is shaped by KV-cache transfer bandwidth, not evenly spaced: same host
 dominates same rack 5:1 and same zone 20:1, so co-location wins outright while the
-looser levels still break ties among non-colocated candidates.
+looser levels still break ties among non-colocated candidates. Approximate transfer
+bandwidth by path, which the ratios above track: NVLink ~900 GB/s, a single NIC and
+switch hop ~100-400 Gb/s (roughly two orders of magnitude below NVLink), multiple
+switch hops within a zone lower still, and inter-datacenter links the tightest of all.
+
+`Compare` returns exactly one `Level` per call (an ordered switch with early returns,
+tightest tier first), so `Score` performs a single `levelScores` lookup per endpoint,
+never a sum. Each score is already in `[0.00, 1.00]`; there is nothing to normalize
+within this scorer. A total above 1.0 across a profile's scorers comes from
+`runScorerPlugins` in the scheduler (`pkg/epp/scheduling/scheduler_profile.go`), which
+clamps each scorer's output to `[0, 1]` and then sums `score * weight` across every
+scorer configured in the profile — a property of profile weighting, not of this
+scorer's own output.
 
 The curve is hardcoded, not configurable per level, in this release. A missing value
 never matches, including empty against empty: an endpoint with no `Hostname` never scores
@@ -43,20 +55,14 @@ skewing it.
 ## Inputs consumed
 
 Reads the `Topology` attribute (`topology-extractor`) from the candidate endpoints and
-from the peer endpoint. The peer endpoint is resolved from, in order:
-
-1. The `peer-endpoint` request attribute, published by `disagg-profile-handler` before
-   running the `prefill` profile in single-EPP deployments.
-2. The `peerTopologyHeader` request header, set by the prefill-side response stamper in
-   coordinator deployments with separate prefill and decode EPPs. Not yet implemented;
-   configuring this parameter has no effect until that stamper lands.
+from the peer endpoint. The peer endpoint is resolved from the `peer-endpoint` request
+attribute, published by `disagg-profile-handler` before running the `prefill` profile.
 
 ## Configuration
 
 | Parameter               | Required | Default | Description                                                                  |
 |--------------------------|----------|---------|--------------------------------------------------------------------------------|
 | `topologyProducerName`   | no       | default producer | `topology-extractor` instance to read the `Topology` attribute from. |
-| `peerTopologyHeader`     | no       | unset   | Header carrying the peer topology when the peer endpoint is not in-process. Not yet implemented. |
 
 **Configuration Example:**
 ```yaml

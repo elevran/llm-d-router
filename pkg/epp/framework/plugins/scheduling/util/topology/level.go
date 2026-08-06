@@ -37,37 +37,32 @@ const (
 	LevelNone
 )
 
-// String returns the config-facing name of the level.
+// levelNames maps each Level to its config-facing name, tightest to loosest.
+var levelNames = map[Level]string{
+	LevelHost:   "host",
+	LevelRack:   "rack",
+	LevelZone:   "zone",
+	LevelRegion: "region",
+}
+
+// String returns the config-facing name of the level, or "none" for LevelNone
+// and any other unrecognized value.
 func (l Level) String() string {
-	switch l {
-	case LevelHost:
-		return "host"
-	case LevelRack:
-		return "rack"
-	case LevelZone:
-		return "zone"
-	case LevelRegion:
-		return "region"
-	default:
-		return "none"
+	if s, ok := levelNames[l]; ok {
+		return s
 	}
+	return "none"
 }
 
 // ParseLevel parses a config value into a Level. Valid values are "host",
 // "rack", "zone", and "region".
 func ParseLevel(s string) (Level, error) {
-	switch s {
-	case "host":
-		return LevelHost, nil
-	case "rack":
-		return LevelRack, nil
-	case "zone":
-		return LevelZone, nil
-	case "region":
-		return LevelRegion, nil
-	default:
-		return LevelNone, fmt.Errorf("invalid topology level %q, must be one of host, rack, zone, region", s)
+	for level, name := range levelNames {
+		if name == s {
+			return level, nil
+		}
 	}
+	return LevelNone, fmt.Errorf("invalid topology level %q, must be one of host, rack, zone, region", s)
 }
 
 // Compare returns the tightest level at which peer and candidate share a
