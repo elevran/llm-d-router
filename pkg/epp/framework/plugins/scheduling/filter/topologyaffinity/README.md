@@ -30,6 +30,12 @@ A missing value never matches, including empty against empty: an endpoint with n
 `Hostname`. A candidate endpoint entirely missing the `Topology` attribute is dropped,
 not treated as a match.
 
+`minAffinity: host` assumes a host is the NVLink boundary, true for switched 8-GPU
+NVLink baseboards (HGX/DGX) but not for rack-scale NVLink domains (e.g. NVL72), where
+the switched fabric spans many hosts and `Rack` is the tier that shares NVLink-class
+bandwidth. On that hardware, use `minAffinity: rack`, if the extractor populates a
+`Rack` value that reflects the NVLink domain rather than a physical enclosure.
+
 ## Inputs consumed
 
 Reads the `Topology` attribute (`topology-extractor`) from the candidate endpoints and

@@ -52,6 +52,13 @@ unknown, or has no non-empty topology field) or when the candidate is missing th
 `Topology` attribute. A zero score contributes nothing to the weighted sum rather than
 skewing it.
 
+The `Hostname` tier assumes a host is the NVLink boundary, true for switched 8-GPU
+NVLink baseboards (HGX/DGX) but not for rack-scale NVLink domains (e.g. NVL72), where
+the switched fabric spans many hosts and `Rack` is the tier that shares NVLink-class
+bandwidth. On that hardware, filter or score on `Rack` rather than `Hostname`, if the
+extractor populates a `Rack` value that reflects the NVLink domain rather than a
+physical enclosure.
+
 ## Inputs consumed
 
 Reads the `Topology` attribute (`topology-extractor`) from the candidate endpoints and
