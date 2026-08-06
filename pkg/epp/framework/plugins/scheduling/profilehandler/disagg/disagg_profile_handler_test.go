@@ -1417,7 +1417,7 @@ func TestHandler_Pick_PD_StampsPeerEndpointBeforePrefill(t *testing.T) {
 	got := h.Pick(ctx, req, profiles, profileResults)
 	assert.ElementsMatch(t, []string{defaultPrefillProfile}, profileNames(got), "prefill must run")
 
-	peer, ok := scheduling.ReadRequestAttribute[scheduling.Endpoint](req, scheduling.PeerEndpointAttributeKey)
+	peer, ok := scheduling.ReadRequestAttribute[scheduling.Endpoint](req, PeerEndpointAttributeKey)
 	assert.True(t, ok, "peer endpoint attribute must be published before prefill runs")
 	assert.Equal(t, decodeResult.TargetEndpoints[0], peer)
 }
@@ -1442,6 +1442,6 @@ func TestHandler_Pick_PD_NoPeerEndpointWhenPrefillSkipped(t *testing.T) {
 	got := h.Pick(ctx, req, profiles, profileResults)
 	assert.Empty(t, got, "prefill must be skipped")
 
-	_, ok := scheduling.ReadRequestAttribute[scheduling.Endpoint](req, scheduling.PeerEndpointAttributeKey)
+	_, ok := scheduling.ReadRequestAttribute[scheduling.Endpoint](req, PeerEndpointAttributeKey)
 	assert.False(t, ok, "peer endpoint attribute must not be published when prefill is skipped")
 }

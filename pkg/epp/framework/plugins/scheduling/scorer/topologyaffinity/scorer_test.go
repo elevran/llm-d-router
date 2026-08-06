@@ -28,6 +28,7 @@ import (
 	fwkplugin "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/plugin"
 	fwksched "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/scheduling"
 	attrtopology "github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/datalayer/attribute/topology"
+	"github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/scheduling/profilehandler/disagg"
 )
 
 func makeEndpoint(t *testing.T, name string, topo *attrtopology.Topology) fwksched.Endpoint {
@@ -47,7 +48,7 @@ func requestWithPeer(topo *attrtopology.Topology) *fwksched.InferenceRequest {
 	if topo != nil {
 		peer.Put(attrtopology.TopologyAttributeKey.String(), topo)
 	}
-	req.PutAttribute(fwksched.PeerEndpointAttributeKey, peer)
+	req.PutAttribute(disagg.PeerEndpointAttributeKey, peer)
 	return req
 }
 

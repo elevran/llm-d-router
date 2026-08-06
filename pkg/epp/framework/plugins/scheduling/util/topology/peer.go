@@ -20,13 +20,14 @@ import (
 	fwkdl "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/datalayer"
 	fwksched "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/scheduling"
 	attrtopology "github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/datalayer/attribute/topology"
+	"github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/scheduling/profilehandler/disagg"
 )
 
 // PeerTopology returns the topology of the endpoint selected in the peer
 // scheduling phase, or false when no peer topology is available.
 //
 // Single EPP: disagg-profile-handler publishes the peer Endpoint as the
-// scheduling.PeerEndpointAttributeKey request attribute before running the
+// disagg.PeerEndpointAttributeKey request attribute before running the
 // prefill profile; its Topology attribute (dataKey) is read directly.
 //
 // Coordinator, separate P/D EPPs: the peer's topology arrives encoded on
@@ -39,7 +40,7 @@ func PeerTopology(request *fwksched.InferenceRequest, dataKey, header string) (*
 	if request == nil {
 		return nil, false
 	}
-	if peer, ok := fwksched.ReadRequestAttribute[fwksched.Endpoint](request, fwksched.PeerEndpointAttributeKey); ok && peer != nil {
+	if peer, ok := fwksched.ReadRequestAttribute[fwksched.Endpoint](request, disagg.PeerEndpointAttributeKey); ok && peer != nil {
 		if topo, ok := fwkdl.ReadAttribute[*attrtopology.Topology](peer, dataKey); ok {
 			return topo, true
 		}

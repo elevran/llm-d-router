@@ -7,6 +7,10 @@ in an earlier scheduling phase.
 
 ## What it does
 
+Scoped to single-EPP disaggregated deployments, where one EPP process runs both the
+`decode` and `prefill` scheduling profiles for a request. Coordinator deployments, where
+prefill and decode are picked by separate EPPs, are not yet supported.
+
 For a disaggregated prefill/decode request, `disagg-profile-handler` selects the decode
 endpoint first, then runs the `prefill` profile to select a prefill endpoint. This plugin
 runs in the `prefill` profile and keeps only the candidates whose topology is co-located
@@ -29,13 +33,8 @@ not treated as a match.
 ## Inputs consumed
 
 Reads the `Topology` attribute (`topology-extractor`) from the candidate endpoints and
-from the peer endpoint. The peer endpoint is resolved from, in order:
-
-1. The `peer-endpoint` request attribute, published by `disagg-profile-handler` before
-   running the `prefill` profile in single-EPP deployments.
-2. The `peerTopologyHeader` request header, set by the prefill-side response stamper in
-   coordinator deployments with separate prefill and decode EPPs. Not yet implemented;
-   configuring this parameter has no effect until that stamper lands.
+from the peer endpoint. The peer endpoint is resolved from the `peer-endpoint` request
+attribute, published by `disagg-profile-handler` before running the `prefill` profile.
 
 ## Configuration
 
@@ -43,7 +42,6 @@ from the peer endpoint. The peer endpoint is resolved from, in order:
 |--------------------------|----------|---------|----------------------------------------------------------------------------------------|
 | `minAffinity`            | no       | `host`  | Tightest-to-loosest floor an endpoint must meet: `host`, `rack`, `zone`, or `region`.  |
 | `topologyProducerName`   | no       | default producer | `topology-extractor` instance to read the `Topology` attribute from.        |
-| `peerTopologyHeader`     | no       | unset   | Header carrying the peer topology when the peer endpoint is not in-process. Not yet implemented. |
 
 **Configuration Example:**
 ```yaml

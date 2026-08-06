@@ -25,6 +25,7 @@ import (
 	fwkdl "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/datalayer"
 	fwksched "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/scheduling"
 	attrtopology "github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/datalayer/attribute/topology"
+	"github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/scheduling/profilehandler/disagg"
 )
 
 func TestPeerTopology_NilRequest(t *testing.T) {
@@ -45,7 +46,7 @@ func TestPeerTopology_FromPeerEndpointAttribute(t *testing.T) {
 	peerEndpoint.Put(attrtopology.TopologyAttributeKey.String(), topo)
 
 	req := &fwksched.InferenceRequest{}
-	req.PutAttribute(fwksched.PeerEndpointAttributeKey, peerEndpoint)
+	req.PutAttribute(disagg.PeerEndpointAttributeKey, peerEndpoint)
 
 	got, ok := PeerTopology(req, attrtopology.TopologyAttributeKey.String(), "")
 	assert.True(t, ok)
@@ -57,7 +58,7 @@ func TestPeerTopology_PeerEndpointMissingTopologyAttribute(t *testing.T) {
 	peerEndpoint := fwksched.NewEndpoint(meta, &fwkdl.Metrics{}, fwkdl.NewAttributes())
 
 	req := &fwksched.InferenceRequest{}
-	req.PutAttribute(fwksched.PeerEndpointAttributeKey, peerEndpoint)
+	req.PutAttribute(disagg.PeerEndpointAttributeKey, peerEndpoint)
 
 	_, ok := PeerTopology(req, attrtopology.TopologyAttributeKey.String(), "")
 	assert.False(t, ok)

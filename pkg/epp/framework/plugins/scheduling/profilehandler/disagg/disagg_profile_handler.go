@@ -36,6 +36,13 @@ const (
 	defaultEncodeProfile  = "encode"
 )
 
+// PeerEndpointAttributeKey is the request-attribute key under which this
+// handler publishes the endpoint selected in an earlier scheduling phase
+// (the decode pick, before running the prefill profile), for plugins in a
+// later profile to compare against (e.g. topology affinity between a
+// disaggregated prefill and decode pick). The value is an Endpoint.
+const PeerEndpointAttributeKey = "peer-endpoint"
+
 // ── Factory & constructor ────────────────────────────────────────────────────
 
 type disaggProfilesParameters struct {
@@ -333,7 +340,7 @@ func (h *Handler) Pick(ctx context.Context, request *scheduling.InferenceRequest
 			if h.pdDecider != nil && h.pdDecider.disaggregate(ctx, request, decodeRes.TargetEndpoints[0]) {
 				// Publish the decode pick so plugins in the prefill profile (e.g.
 				// topology affinity) can compare candidates against it.
-				request.PutAttribute(scheduling.PeerEndpointAttributeKey, decodeRes.TargetEndpoints[0])
+				request.PutAttribute(PeerEndpointAttributeKey, decodeRes.TargetEndpoints[0])
 				span.SetAttributes(attribute.String("llm_d.epp.profile_handler.decision", "run_prefill"))
 				return map[string]scheduling.SchedulerProfile{h.prefillProfile: profiles[h.prefillProfile]}
 			}

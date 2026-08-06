@@ -18,12 +18,6 @@ package scheduling
 
 import "sync"
 
-// PeerEndpointAttributeKey is the request-attribute key under which a profile
-// handler publishes the endpoint selected in an earlier scheduling phase, for
-// plugins in a later profile to compare against (e.g. topology affinity
-// between a disaggregated prefill and decode pick). The value is an Endpoint.
-const PeerEndpointAttributeKey = "peer-endpoint"
-
 // PutAttribute stores value at key in the request's attribute store.
 // The backing store is lazily allocated on first write.
 // Callers must not write concurrently to the same request from multiple goroutines.
