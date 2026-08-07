@@ -25,6 +25,12 @@ import (
 	"github.com/llm-d/llm-d-router/pkg/epp/metadata"
 )
 
+// peerTopologyHeaderName is the coordinator's cross-EPP header carrying the
+// prefill endpoint's topology to the decode EPP. A client-supplied value must
+// not reach the backend, since topology-affinity-filter and
+// topology-affinity-scorer trust it as the peer to compare against.
+const peerTopologyHeaderName = "x-peer-topology"
+
 var (
 	// InputControlHeaders are sent by the Gateway/User to control EPP behavior.
 	// We must extract these, then strip them so they don't leak to the backend.
@@ -49,6 +55,7 @@ var (
 			metadata.FlowQueueDurationHeaderKey,
 		),
 		errcommon.RequestDroppedReasonHeaderKey,
+		peerTopologyHeaderName,
 	)
 
 	// ProtocolHeaders are managed by the proxy layer (Envoy/EPP).
