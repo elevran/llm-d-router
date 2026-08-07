@@ -38,6 +38,7 @@ var hopByHopHeaders = map[string]bool{
 var internalForwardingHeaders = map[string]bool{
 	reqcommon.EPPProfileHeaderKey:         true,
 	reqcommon.RevisionDecisionIDHeaderKey: true,
+	"x-peer-topology":                     true,
 }
 
 func isForwardableHeader(name string) bool {
@@ -145,7 +146,15 @@ type RequestContext struct {
 	// KVTransferParams carries the prefill pod's KV-cache transfer hints to the
 	// decode step. Populated by PrefillStep from the prefill response; consumed
 	// by the KV connector when building the decode request.
-	KVTransferParams       map[string]any
+	KVTransferParams map[string]any
+	// PeerTopology carries the prefill endpoint's encoded topology from the
+	// prefill response to the decode request, for topology-affinity-filter
+	// and topology-affinity-scorer running in the decode EPP's profile.
+	// Populated by PrefillStep from the x-peer-topology response header;
+	// forwarded onto the decode request by newDecodeProxyRequest. Empty when
+	// the prefill EPP's config has no topology-stamp-handler.
+	PeerTopology string
+
 	forwardResponseHeaders map[string]struct{}
 	downstreamHeaders      map[string]string
 

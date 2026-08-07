@@ -17,7 +17,8 @@ limitations under the License.
 package gateway
 
 const (
-	ContentTypeHeader = "Content-Type"
+	ContentTypeHeader  = "Content-Type"
+	PeerTopologyHeader = "x-peer-topology"
 
 	PhaseEncode  = "encode"
 	PhasePrefill = "prefill"

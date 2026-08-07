@@ -57,6 +57,7 @@ func TestIsSystemOwnedHeaderIncludesAliases(t *testing.T) {
 		"traceparent",
 		"tracestate",
 		"baggage",
+		"x-peer-topology",
 	}
 
 	for _, header := range systemHeaders {
