@@ -17,7 +17,10 @@ limitations under the License.
 package gateway
 
 const (
-	ContentTypeHeader  = "Content-Type"
+	ContentTypeHeader = "Content-Type"
+	// PeerTopologyHeader must match the default headerName in
+	// pkg/epp/framework/plugins/requestcontrol/responsereceived/topologystamp
+	// and peerTopologyHeaderName in pkg/epp/util/request/headers.go.
 	PeerTopologyHeader = "x-peer-topology"
 
 	PhaseEncode  = "encode"
