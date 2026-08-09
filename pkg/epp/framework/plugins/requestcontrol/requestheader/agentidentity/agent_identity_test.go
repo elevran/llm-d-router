@@ -101,11 +101,9 @@ func TestRequestHeader(t *testing.T) {
 			wantAttrFound: true,
 		},
 		{
-			name:    "previous_response_id in body is ignored",
-			headers: map[string]string{},
-			body: &fwkrh.InferenceRequestBody{
-				Payload: fwkrh.PayloadMap{"previous_response_id": "resp-456"},
-			},
+			name:          "previous_response_id in body is ignored",
+			headers:       map[string]string{},
+			body:          &fwkrh.InferenceRequestBody{Payload: fwkrh.PayloadMap{"previous_response_id": "resp-456"}},
 			wantAttrFound: false,
 		},
 		{

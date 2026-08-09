@@ -834,7 +834,6 @@ func TestOpenAIParser_ParseRequest(t *testing.T) {
 				ChatCompletions: &fwkrh.ChatCompletionsRequest{
 					Messages: []fwkrh.Message{{Role: "user", Content: fwkrh.Content{Raw: "hello"}}},
 				},
-				Stream: true,
 				Payload: fwkrh.PayloadMap{
 					"model": "test",
 					"messages": []any{
@@ -842,6 +841,7 @@ func TestOpenAIParser_ParseRequest(t *testing.T) {
 					},
 					"stream": true,
 				},
+				Stream: true,
 			},
 		},
 		// Embeddings API tests
@@ -1058,7 +1058,7 @@ func TestOpenAIParser_ParseRequest(t *testing.T) {
 			// Model is extracted from the request body's "model" field.
 			tt.want.Model, _ = tt.body["model"].(string)
 
-			if diff := cmp.Diff(tt.want, got.Body, cmp.AllowUnexported(fwkrh.InferenceRequestBody{})); diff != "" {
+			if diff := cmp.Diff(tt.want, got.Body); diff != "" {
 				t.Errorf("ParseRequest() mismatch (-want +got):\n%s", diff)
 			}
 		})

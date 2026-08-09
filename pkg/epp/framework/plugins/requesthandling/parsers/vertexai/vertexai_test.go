@@ -188,7 +188,7 @@ func TestParseRequest(t *testing.T) {
 				t.Fatalf("ParseRequest failed: %v", err)
 			}
 
-			if diff := cmp.Diff(tc.wantResult, res, protocmp.Transform(), cmp.AllowUnexported(fwkrh.InferenceRequestBody{})); diff != "" {
+			if diff := cmp.Diff(tc.wantResult, res, protocmp.Transform()); diff != "" {
 				t.Errorf("ParseResult mismatch (-want +got):\n%s", diff)
 			}
 		})

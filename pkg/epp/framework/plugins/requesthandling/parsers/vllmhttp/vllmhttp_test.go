@@ -98,8 +98,6 @@ func TestVllmHTTPParser_ParseRequest_Generate(t *testing.T) {
 				Generate: &fwkrh.GenerateRequest{
 					TokenIDs: []uint32{1, 2, 3},
 				},
-				Stream:          true,
-				MaxOutputTokens: ptr.To(int64(128)),
 				Payload: fwkrh.PayloadMap{
 					"token_ids": []any{float64(1), float64(2), float64(3)},
 					"sampling_params": map[string]any{
@@ -108,6 +106,8 @@ func TestVllmHTTPParser_ParseRequest_Generate(t *testing.T) {
 					},
 					"stream": true,
 				},
+				Stream:          true,
+				MaxOutputTokens: ptr.To(int64(128)),
 			},
 		},
 		{
@@ -211,7 +211,7 @@ func TestVllmHTTPParser_ParseRequest_Generate(t *testing.T) {
 			if got.SkipResponseProcessing {
 				t.Errorf("ParseRequest() got.SkipResponseProcessing = true, want false")
 			}
-			if diff := cmp.Diff(tt.want, got.Body, cmp.AllowUnexported(fwkrh.InferenceRequestBody{})); diff != "" {
+			if diff := cmp.Diff(tt.want, got.Body); diff != "" {
 				t.Errorf("ParseRequest() mismatch (-want +got):\n%s", diff)
 			}
 		})

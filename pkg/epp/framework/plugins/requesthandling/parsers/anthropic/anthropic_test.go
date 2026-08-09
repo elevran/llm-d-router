@@ -310,7 +310,6 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 						{Role: "user", Content: fwkrh.AnthropicContent{Raw: "Hello"}},
 					},
 				},
-				Stream: true,
 				Payload: fwkrh.PayloadMap{
 					"model":      "claude-sonnet-4-6",
 					"max_tokens": float64(1024),
@@ -319,6 +318,7 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 						map[string]any{"role": "user", "content": "Hello"},
 					},
 				},
+				Stream: true,
 			},
 		},
 		{
@@ -449,7 +449,7 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 			// Model is extracted from the request body's "model" field.
 			tt.want.Model, _ = tt.body["model"].(string)
 
-			if diff := cmp.Diff(tt.want, got.Body, cmp.AllowUnexported(fwkrh.InferenceRequestBody{})); diff != "" {
+			if diff := cmp.Diff(tt.want, got.Body); diff != "" {
 				t.Errorf("ParseRequest() mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -679,7 +679,7 @@ func TestAnthropicParser_ParseRequest_CountTokens(t *testing.T) {
 				t.Errorf("ParseRequest() SkipResponseProcessing = false, want true")
 			}
 			want := &fwkrh.InferenceRequestBody{Payload: fwkrh.RawPayload(tt.body)}
-			if diff := cmp.Diff(want, got.Body, cmp.AllowUnexported(fwkrh.InferenceRequestBody{})); diff != "" {
+			if diff := cmp.Diff(want, got.Body); diff != "" {
 				t.Errorf("ParseRequest() body mismatch (-want +got):\n%s", diff)
 			}
 		})

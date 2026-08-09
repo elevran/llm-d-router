@@ -87,17 +87,16 @@ func TestProduce_CompletionsVLLMHTTPUsesRawPayload(t *testing.T) {
 		[]renderResponse{{TokenIDs: []uint32{4, 5}}}, renderResponse{})
 	defer srv.Close()
 
-	body := &fwkrh.InferenceRequestBody{
-		Completions: &fwkrh.CompletionsRequest{
-			Prompt: fwkrh.Prompt{Raw: "hello"},
-		},
-		Payload: fwkrh.PayloadMap{
-			"prompt":      "hello",
-			"dummy_field": "kept",
-		},
-	}
 	req := &scheduling.InferenceRequest{
-		Body: body,
+		Body: &fwkrh.InferenceRequestBody{
+			Completions: &fwkrh.CompletionsRequest{
+				Prompt: fwkrh.Prompt{Raw: "hello"},
+			},
+			Payload: fwkrh.PayloadMap{
+				"prompt":      "hello",
+				"dummy_field": "kept",
+			},
+		},
 	}
 
 	p := newTestPlugin(newHTTPRenderer(t, srv))
@@ -217,21 +216,20 @@ func TestProduce_ChatCompletionsVLLMHTTPUsesRawPayload(t *testing.T) {
 	srv, cap := httpFixture(t, nil, renderResponse{TokenIDs: []uint32{9, 10}})
 	defer srv.Close()
 
-	body := &fwkrh.InferenceRequestBody{
-		ChatCompletions: &fwkrh.ChatCompletionsRequest{
-			Messages: []fwkrh.Message{{Role: "user", Content: fwkrh.Content{Raw: "hi"}}},
-		},
-		Payload: fwkrh.PayloadMap{
-			"messages": []any{map[string]any{"role": "user", "content": "hi"}},
-			"model":    "caller-supplied-model",
-			"dummy":    "kept",
-			"reasoning": map[string]any{
-				"effort": "high",
+	req := &scheduling.InferenceRequest{
+		Body: &fwkrh.InferenceRequestBody{
+			ChatCompletions: &fwkrh.ChatCompletionsRequest{
+				Messages: []fwkrh.Message{{Role: "user", Content: fwkrh.Content{Raw: "hi"}}},
+			},
+			Payload: fwkrh.PayloadMap{
+				"messages": []any{map[string]any{"role": "user", "content": "hi"}},
+				"model":    "caller-supplied-model",
+				"dummy":    "kept",
+				"reasoning": map[string]any{
+					"effort": "high",
+				},
 			},
 		},
-	}
-	req := &scheduling.InferenceRequest{
-		Body: body,
 	}
 
 	p := newTestPlugin(newHTTPRenderer(t, srv))

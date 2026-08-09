@@ -156,14 +156,13 @@ func TestProduce_PopulatesTokenizedPrompt(t *testing.T) {
 	}
 	p := newTestPlugin(tok)
 
-	body := &fwkrh.InferenceRequestBody{
-		ChatCompletions: &fwkrh.ChatCompletionsRequest{
-			Messages: []fwkrh.Message{{Role: "user", Content: fwkrh.Content{Raw: "hi"}}},
-		},
-	}
-	body.Payload = fwkrh.PayloadMap{}
 	req := &scheduling.InferenceRequest{
-		Body: body,
+		Body: &fwkrh.InferenceRequestBody{
+			ChatCompletions: &fwkrh.ChatCompletionsRequest{
+				Messages: []fwkrh.Message{{Role: "user", Content: fwkrh.Content{Raw: "hi"}}},
+			},
+			Payload: fwkrh.PayloadMap{},
+		},
 	}
 	require.NoError(t, p.Produce(context.Background(), req, nil))
 	require.NotNil(t, req.Body.TokenizedPrompt)
@@ -273,14 +272,13 @@ func TestProduce_TokenizerError(t *testing.T) {
 		},
 	}
 	p := newTestPlugin(tok)
-	body := &fwkrh.InferenceRequestBody{
-		ChatCompletions: &fwkrh.ChatCompletionsRequest{
-			Messages: []fwkrh.Message{{Role: "user", Content: fwkrh.Content{Raw: "hi"}}},
-		},
-	}
-	body.Payload = fwkrh.PayloadMap{}
 	req := &scheduling.InferenceRequest{
-		Body: body,
+		Body: &fwkrh.InferenceRequestBody{
+			ChatCompletions: &fwkrh.ChatCompletionsRequest{
+				Messages: []fwkrh.Message{{Role: "user", Content: fwkrh.Content{Raw: "hi"}}},
+			},
+			Payload: fwkrh.PayloadMap{},
+		},
 	}
 	err := p.Produce(context.Background(), req, nil)
 	require.Error(t, err)
@@ -290,9 +288,10 @@ func TestProduce_TokenizerError(t *testing.T) {
 
 func TestProduce_UnsupportedBodyType(t *testing.T) {
 	p := newTestPlugin(&mockTokenizer{})
-	body := &fwkrh.InferenceRequestBody{Payload: fwkrh.PayloadMap{}}
 	req := &scheduling.InferenceRequest{
-		Body: body,
+		Body: &fwkrh.InferenceRequestBody{
+			Payload: fwkrh.PayloadMap{},
+		},
 	}
 	err := p.Produce(context.Background(), req, nil)
 	require.Error(t, err)
@@ -779,18 +778,17 @@ func TestProduce_MessagesRequest(t *testing.T) {
 
 	// Payload holds the raw request body; RenderChat must receive the converted
 	// /render body, not that raw payload.
-	body := &fwkrh.InferenceRequestBody{
-		Messages: &fwkrh.MessagesRequest{
-			System:   fwkrh.AnthropicContent{Raw: "Be helpful."},
-			Messages: []fwkrh.AnthropicMessage{{Role: "user", Content: fwkrh.AnthropicContent{Raw: "Hi"}}},
-		},
-		Payload: fwkrh.PayloadMap{
-			"system":   "Be helpful.",
-			"messages": []any{map[string]any{"role": "user", "content": "Hi"}},
-		},
-	}
 	req := &scheduling.InferenceRequest{
-		Body: body,
+		Body: &fwkrh.InferenceRequestBody{
+			Payload: fwkrh.PayloadMap{
+				"system":   "Be helpful.",
+				"messages": []any{map[string]any{"role": "user", "content": "Hi"}},
+			},
+			Messages: &fwkrh.MessagesRequest{
+				System:   fwkrh.AnthropicContent{Raw: "Be helpful."},
+				Messages: []fwkrh.AnthropicMessage{{Role: "user", Content: fwkrh.AnthropicContent{Raw: "Hi"}}},
+			},
+		},
 	}
 	require.NoError(t, p.Produce(context.Background(), req, nil))
 	require.NotNil(t, req.Body.TokenizedPrompt)
