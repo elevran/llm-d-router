@@ -108,12 +108,10 @@ type InferenceRequestBody struct {
 	Generate *GenerateRequest `json:"generate,omitempty"`
 	// ImagesGenerationsRequest is the representation of the OpenAI /v1/images/generations request body.
 	Images *ImagesGenerationsRequest `json:"images,omitempty"`
-	// payload contains the unmarshaled request payload or raw bytes.
+	// Payload contains the unmarshaled request payload or raw bytes.
 	// If the payload is unmarshaled, we can perform advanced processing (like prefix cache aware routing).
 	// If it remains as raw bytes, such processing may not be supported.
-	// Read via Payload, write via SetPayload -- the setter marks the body mutated so
-	// repackage knows whether it must re-serialize.
-	payload RequestPayload
+	Payload RequestPayload `json:"-"`
 	// TokenizedPrompt contains parser-derived tokenization results when available.
 	// It is nil when the request was not already tokenized.
 	TokenizedPrompt *TokenizedPrompt `json:"-"`
@@ -133,35 +131,24 @@ type InferenceRequestBody struct {
 	// if absent. Not round-tripped; the forwarded model lives in Payload.
 	Model string `json:"-"`
 
-	// mutated tracks whether payload's content has changed since the parser's initial
-	// SetPayload call, so callers can skip re-serializing it when nothing changed.
-	mutated bool
+	// Mutated marks that Payload's content has changed since the parser produced it, so
+	// repackage knows it must re-serialize instead of forwarding the original bytes. Callers
+	// that replace or edit Payload after parsing (e.g. a model-name rewrite) must set this to
+	// true themselves; it is not inferred or enforced -- see MutatePayloadMap for the one
+	// in-place-edit case the codebase needs today.
+	Mutated bool
 }
 
-// Payload returns the request payload established by the parser or replaced by a later
-// SetPayload call.
-func (b *InferenceRequestBody) Payload() RequestPayload {
-	return b.payload
-}
-
-// SetPayload replaces the payload. It marks the body mutated when a payload was already
-// present before this call -- the parser's initial call runs while payload is still nil, so
-// that call alone never marks mutated; every later call (a rewrite, or a test/plugin
-// re-asserting a mutated map) does. Once mutated, it stays mutated even if a later call
-// happens to pass nil back to nil. Callers must only call this when the new payload actually
-// differs from the current one -- e.g. a model rewriter that first checks the name actually
-// changes before calling this -- and must call it again (with the same value) after any
-// in-place edit to an already-referenced PayloadMap.
-func (b *InferenceRequestBody) SetPayload(payload RequestPayload) {
-	if b.payload != nil {
-		b.mutated = true
+// MutatePayloadMap edits Payload in place via fn when Payload is a PayloadMap, and marks the
+// body Mutated in the same call so the two can't be separated by an omitted follow-up write.
+// No-op (Mutated left untouched) when Payload is not a PayloadMap.
+func (b *InferenceRequestBody) MutatePayloadMap(fn func(PayloadMap)) {
+	m, ok := b.Payload.(PayloadMap)
+	if !ok {
+		return
 	}
-	b.payload = payload
-}
-
-// Mutated reports whether the payload's content has changed since parsing.
-func (b *InferenceRequestBody) Mutated() bool {
-	return b.mutated
+	fn(m)
+	b.Mutated = true
 }
 
 // MaxOutputTokensFromPayload returns the client-requested output-token cap read

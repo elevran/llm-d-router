@@ -420,11 +420,9 @@ type mockParser struct {
 
 func (m *mockParser) ParseRequest(ctx context.Context, body []byte, headers map[string]string) (*fwkrh.ParseResult, error) {
 	if m.skip {
-		reqBody := &fwkrh.InferenceRequestBody{}
-		reqBody.SetPayload(fwkrh.RawPayload(body))
 		return &fwkrh.ParseResult{
 			SkipResponseProcessing: true,
-			Body:                   reqBody,
+			Body:                   &fwkrh.InferenceRequestBody{Payload: fwkrh.RawPayload(body)},
 		}, nil
 	}
 	return &fwkrh.ParseResult{SkipResponseProcessing: false, Body: &fwkrh.InferenceRequestBody{}}, nil
@@ -511,8 +509,8 @@ func TestServer_Skip(t *testing.T) {
 
 	// Verify that the body was forced to have RawPayload
 	require.NotNil(t, director.lastInferenceRequestBody, "InferenceRequestBody should be non-nil")
-	require.NotNil(t, director.lastInferenceRequestBody.Payload(), "Payload should be non-nil")
-	rawPayload, ok := director.lastInferenceRequestBody.Payload().(fwkrh.RawPayload)
+	require.NotNil(t, director.lastInferenceRequestBody.Payload, "Payload should be non-nil")
+	rawPayload, ok := director.lastInferenceRequestBody.Payload.(fwkrh.RawPayload)
 	require.True(t, ok, "Payload should be RawPayload")
 	require.Equal(t, []byte(`{"model":"test"}`), []byte(rawPayload), "Payload should match raw body")
 

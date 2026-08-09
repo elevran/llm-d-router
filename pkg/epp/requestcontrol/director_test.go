@@ -582,10 +582,9 @@ func TestDirector_HandleRequest(t *testing.T) {
 			preRequestPlugin: &mockPreRequestPlugin{
 				name: "test-pre-request-plugin",
 				modifyFn: func(request *fwksched.InferenceRequest) {
-					if payloadMap, ok := request.Body.Payload().(fwkrh.PayloadMap); ok {
-						payloadMap["new_key"] = "new_value"
-						request.Body.SetPayload(payloadMap)
-					}
+					request.Body.MutatePayloadMap(func(m fwkrh.PayloadMap) {
+						m["new_key"] = "new_value"
+					})
 				},
 			},
 		}, {

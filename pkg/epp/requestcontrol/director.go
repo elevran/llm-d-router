@@ -371,8 +371,8 @@ func (d *Director) HandleRequest(ctx context.Context, reqCtx *handlers.RequestCo
 }
 
 // modelRewriteIfNeeded rewrites the model name in the payload when the resolved target
-// differs from the model the parser read out of the body, marking the body mutated via
-// SetPayload so repackage can skip re-marshaling when nothing changed.
+// differs from the model the parser read out of the body, marking the body Mutated so
+// repackage can skip re-marshaling when nothing changed.
 func (d *Director) modelRewriteIfNeeded(ctx context.Context, reqCtx *handlers.RequestContext, inferenceRequestBody *fwkrh.InferenceRequestBody) error {
 	logger := log.FromContext(ctx)
 	rewriter, ok := reqCtx.Parser.(fwkrh.ModelNameRewriter)
@@ -380,7 +380,7 @@ func (d *Director) modelRewriteIfNeeded(ctx context.Context, reqCtx *handlers.Re
 		logger.Info("Warning: parser does not implement ModelNameRewriter, skipping model rewrite")
 		return nil
 	}
-	payload, ok := inferenceRequestBody.Payload().(fwkrh.MarshalablePayload)
+	payload, ok := inferenceRequestBody.Payload.(fwkrh.MarshalablePayload)
 	if !ok {
 		logger.Info("Warning: payload does not implement MarshalablePayload, skipping model rewrite")
 		return nil
@@ -399,7 +399,8 @@ func (d *Director) modelRewriteIfNeeded(ctx context.Context, reqCtx *handlers.Re
 	if err != nil {
 		return err
 	}
-	inferenceRequestBody.SetPayload(rewritten)
+	inferenceRequestBody.Payload = rewritten
+	inferenceRequestBody.Mutated = true
 	return nil
 }
 
@@ -407,11 +408,11 @@ func (d *Director) modelRewriteIfNeeded(ctx context.Context, reqCtx *handlers.Re
 // parsing (see InferenceRequestBody.Mutated), skipping the marshal otherwise so the
 // originally received bytes are forwarded unchanged.
 func (d *Director) repackage(ctx context.Context, reqCtx *handlers.RequestContext, inferenceRequestBody *fwkrh.InferenceRequestBody) error {
-	if !inferenceRequestBody.Mutated() {
+	if !inferenceRequestBody.Mutated {
 		reqCtx.RequestSize = len(reqCtx.Request.RawBody)
 		return nil
 	}
-	marshaler, ok := inferenceRequestBody.Payload().(fwkrh.Marshaler)
+	marshaler, ok := inferenceRequestBody.Payload.(fwkrh.Marshaler)
 	if !ok {
 		// Payload forwarded unchanged (raw or proto).
 		reqCtx.RequestSize = len(reqCtx.Request.RawBody)

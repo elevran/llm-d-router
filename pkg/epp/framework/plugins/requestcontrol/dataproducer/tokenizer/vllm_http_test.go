@@ -91,11 +91,11 @@ func TestProduce_CompletionsVLLMHTTPUsesRawPayload(t *testing.T) {
 		Completions: &fwkrh.CompletionsRequest{
 			Prompt: fwkrh.Prompt{Raw: "hello"},
 		},
+		Payload: fwkrh.PayloadMap{
+			"prompt":      "hello",
+			"dummy_field": "kept",
+		},
 	}
-	body.SetPayload(fwkrh.PayloadMap{
-		"prompt":      "hello",
-		"dummy_field": "kept",
-	})
 	req := &scheduling.InferenceRequest{
 		Body: body,
 	}
@@ -221,15 +221,15 @@ func TestProduce_ChatCompletionsVLLMHTTPUsesRawPayload(t *testing.T) {
 		ChatCompletions: &fwkrh.ChatCompletionsRequest{
 			Messages: []fwkrh.Message{{Role: "user", Content: fwkrh.Content{Raw: "hi"}}},
 		},
-	}
-	body.SetPayload(fwkrh.PayloadMap{
-		"messages": []any{map[string]any{"role": "user", "content": "hi"}},
-		"model":    "caller-supplied-model",
-		"dummy":    "kept",
-		"reasoning": map[string]any{
-			"effort": "high",
+		Payload: fwkrh.PayloadMap{
+			"messages": []any{map[string]any{"role": "user", "content": "hi"}},
+			"model":    "caller-supplied-model",
+			"dummy":    "kept",
+			"reasoning": map[string]any{
+				"effort": "high",
+			},
 		},
-	})
+	}
 	req := &scheduling.InferenceRequest{
 		Body: body,
 	}

@@ -161,7 +161,7 @@ func TestProduce_PopulatesTokenizedPrompt(t *testing.T) {
 			Messages: []fwkrh.Message{{Role: "user", Content: fwkrh.Content{Raw: "hi"}}},
 		},
 	}
-	body.SetPayload(fwkrh.PayloadMap{})
+	body.Payload = fwkrh.PayloadMap{}
 	req := &scheduling.InferenceRequest{
 		Body: body,
 	}
@@ -278,7 +278,7 @@ func TestProduce_TokenizerError(t *testing.T) {
 			Messages: []fwkrh.Message{{Role: "user", Content: fwkrh.Content{Raw: "hi"}}},
 		},
 	}
-	body.SetPayload(fwkrh.PayloadMap{})
+	body.Payload = fwkrh.PayloadMap{}
 	req := &scheduling.InferenceRequest{
 		Body: body,
 	}
@@ -290,8 +290,7 @@ func TestProduce_TokenizerError(t *testing.T) {
 
 func TestProduce_UnsupportedBodyType(t *testing.T) {
 	p := newTestPlugin(&mockTokenizer{})
-	body := &fwkrh.InferenceRequestBody{}
-	body.SetPayload(fwkrh.PayloadMap{})
+	body := &fwkrh.InferenceRequestBody{Payload: fwkrh.PayloadMap{}}
 	req := &scheduling.InferenceRequest{
 		Body: body,
 	}
@@ -785,11 +784,11 @@ func TestProduce_MessagesRequest(t *testing.T) {
 			System:   fwkrh.AnthropicContent{Raw: "Be helpful."},
 			Messages: []fwkrh.AnthropicMessage{{Role: "user", Content: fwkrh.AnthropicContent{Raw: "Hi"}}},
 		},
+		Payload: fwkrh.PayloadMap{
+			"system":   "Be helpful.",
+			"messages": []any{map[string]any{"role": "user", "content": "Hi"}},
+		},
 	}
-	body.SetPayload(fwkrh.PayloadMap{
-		"system":   "Be helpful.",
-		"messages": []any{map[string]any{"role": "user", "content": "Hi"}},
-	})
 	req := &scheduling.InferenceRequest{
 		Body: body,
 	}

@@ -27,7 +27,6 @@ import (
 
 	fwkplugin "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/plugin"
 	fwkrh "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/requesthandling"
-	testutil "github.com/llm-d/llm-d-router/pkg/epp/util/testing"
 )
 
 func TestNewAnthropicParser(t *testing.T) {
@@ -63,20 +62,21 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 					map[string]any{"role": "user", "content": "Hello, Claude"},
 				},
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				MaxOutputTokens: ptr.To(int64(1024)),
 				Messages: &fwkrh.MessagesRequest{
 					Messages: []fwkrh.AnthropicMessage{
 						{Role: "user", Content: fwkrh.AnthropicContent{Raw: "Hello, Claude"}},
 					},
 				},
-			}, fwkrh.PayloadMap{
-				"model":      "claude-sonnet-4-6",
-				"max_tokens": float64(1024),
-				"messages": []any{
-					map[string]any{"role": "user", "content": "Hello, Claude"},
+				Payload: fwkrh.PayloadMap{
+					"model":      "claude-sonnet-4-6",
+					"max_tokens": float64(1024),
+					"messages": []any{
+						map[string]any{"role": "user", "content": "Hello, Claude"},
+					},
 				},
-			}),
+			},
 		},
 		{
 			name:    "structured content blocks",
@@ -93,7 +93,7 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 					},
 				},
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				MaxOutputTokens: ptr.To(int64(1024)),
 				Messages: &fwkrh.MessagesRequest{
 					Messages: []fwkrh.AnthropicMessage{
@@ -104,18 +104,19 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 						}},
 					},
 				},
-			}, fwkrh.PayloadMap{
-				"model":      "claude-sonnet-4-6",
-				"max_tokens": float64(1024),
-				"messages": []any{
-					map[string]any{
-						"role": "user",
-						"content": []any{
-							map[string]any{"type": "text", "text": "Describe this image"},
+				Payload: fwkrh.PayloadMap{
+					"model":      "claude-sonnet-4-6",
+					"max_tokens": float64(1024),
+					"messages": []any{
+						map[string]any{
+							"role": "user",
+							"content": []any{
+								map[string]any{"type": "text", "text": "Describe this image"},
+							},
 						},
 					},
 				},
-			}),
+			},
 		},
 		{
 			name:    "system prompt as string",
@@ -128,7 +129,7 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 					map[string]any{"role": "user", "content": "Hello"},
 				},
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				MaxOutputTokens: ptr.To(int64(1024)),
 				Messages: &fwkrh.MessagesRequest{
 					System: fwkrh.AnthropicContent{Raw: "You are a helpful assistant."},
@@ -136,14 +137,15 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 						{Role: "user", Content: fwkrh.AnthropicContent{Raw: "Hello"}},
 					},
 				},
-			}, fwkrh.PayloadMap{
-				"model":      "claude-sonnet-4-6",
-				"max_tokens": float64(1024),
-				"system":     "You are a helpful assistant.",
-				"messages": []any{
-					map[string]any{"role": "user", "content": "Hello"},
+				Payload: fwkrh.PayloadMap{
+					"model":      "claude-sonnet-4-6",
+					"max_tokens": float64(1024),
+					"system":     "You are a helpful assistant.",
+					"messages": []any{
+						map[string]any{"role": "user", "content": "Hello"},
+					},
 				},
-			}),
+			},
 		},
 		{
 			name:    "system prompt as content blocks",
@@ -158,7 +160,7 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 					map[string]any{"role": "user", "content": "Hello"},
 				},
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				MaxOutputTokens: ptr.To(int64(1024)),
 				Messages: &fwkrh.MessagesRequest{
 					System: fwkrh.AnthropicContent{
@@ -170,16 +172,17 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 						{Role: "user", Content: fwkrh.AnthropicContent{Raw: "Hello"}},
 					},
 				},
-			}, fwkrh.PayloadMap{
-				"model":      "claude-sonnet-4-6",
-				"max_tokens": float64(1024),
-				"system": []any{
-					map[string]any{"type": "text", "text": "You are a helpful assistant."},
+				Payload: fwkrh.PayloadMap{
+					"model":      "claude-sonnet-4-6",
+					"max_tokens": float64(1024),
+					"system": []any{
+						map[string]any{"type": "text", "text": "You are a helpful assistant."},
+					},
+					"messages": []any{
+						map[string]any{"role": "user", "content": "Hello"},
+					},
 				},
-				"messages": []any{
-					map[string]any{"role": "user", "content": "Hello"},
-				},
-			}),
+			},
 		},
 		{
 			name:    "message with image content",
@@ -204,7 +207,7 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 					},
 				},
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				MaxOutputTokens: ptr.To(int64(1024)),
 				Messages: &fwkrh.MessagesRequest{
 					Messages: []fwkrh.AnthropicMessage{
@@ -223,26 +226,27 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 						}},
 					},
 				},
-			}, fwkrh.PayloadMap{
-				"model":      "claude-sonnet-4-6",
-				"max_tokens": float64(1024),
-				"messages": []any{
-					map[string]any{
-						"role": "user",
-						"content": []any{
-							map[string]any{
-								"type": "image",
-								"source": map[string]any{
-									"type":       "base64",
-									"media_type": "image/png",
-									"data":       "iVBORw0KGgo=",
+				Payload: fwkrh.PayloadMap{
+					"model":      "claude-sonnet-4-6",
+					"max_tokens": float64(1024),
+					"messages": []any{
+						map[string]any{
+							"role": "user",
+							"content": []any{
+								map[string]any{
+									"type": "image",
+									"source": map[string]any{
+										"type":       "base64",
+										"media_type": "image/png",
+										"data":       "iVBORw0KGgo=",
+									},
 								},
+								map[string]any{"type": "text", "text": "What is in this image?"},
 							},
-							map[string]any{"type": "text", "text": "What is in this image?"},
 						},
 					},
 				},
-			}),
+			},
 		},
 		{
 			name:    "request with tools",
@@ -260,7 +264,7 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 					map[string]any{"role": "user", "content": "What's the weather?"},
 				},
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				MaxOutputTokens: ptr.To(int64(1024)),
 				Messages: &fwkrh.MessagesRequest{
 					Tools: []any{
@@ -273,19 +277,20 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 						{Role: "user", Content: fwkrh.AnthropicContent{Raw: "What's the weather?"}},
 					},
 				},
-			}, fwkrh.PayloadMap{
-				"model":      "claude-sonnet-4-6",
-				"max_tokens": float64(1024),
-				"tools": []any{
-					map[string]any{
-						"name":        "get_weather",
-						"description": "Get the weather",
+				Payload: fwkrh.PayloadMap{
+					"model":      "claude-sonnet-4-6",
+					"max_tokens": float64(1024),
+					"tools": []any{
+						map[string]any{
+							"name":        "get_weather",
+							"description": "Get the weather",
+						},
+					},
+					"messages": []any{
+						map[string]any{"role": "user", "content": "What's the weather?"},
 					},
 				},
-				"messages": []any{
-					map[string]any{"role": "user", "content": "What's the weather?"},
-				},
-			}),
+			},
 		},
 		{
 			name:    "request with stream flag",
@@ -298,7 +303,7 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 					map[string]any{"role": "user", "content": "Hello"},
 				},
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				MaxOutputTokens: ptr.To(int64(1024)),
 				Messages: &fwkrh.MessagesRequest{
 					Messages: []fwkrh.AnthropicMessage{
@@ -306,14 +311,15 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 					},
 				},
 				Stream: true,
-			}, fwkrh.PayloadMap{
-				"model":      "claude-sonnet-4-6",
-				"max_tokens": float64(1024),
-				"stream":     true,
-				"messages": []any{
-					map[string]any{"role": "user", "content": "Hello"},
+				Payload: fwkrh.PayloadMap{
+					"model":      "claude-sonnet-4-6",
+					"max_tokens": float64(1024),
+					"stream":     true,
+					"messages": []any{
+						map[string]any{"role": "user", "content": "Hello"},
+					},
 				},
-			}),
+			},
 		},
 		{
 			name:    "request with cache_salt",
@@ -326,7 +332,7 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 					map[string]any{"role": "user", "content": "Hello"},
 				},
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				MaxOutputTokens: ptr.To(int64(1024)),
 				Messages: &fwkrh.MessagesRequest{
 					Messages: []fwkrh.AnthropicMessage{
@@ -334,14 +340,15 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 					},
 					CacheSalt: "test-salt-123",
 				},
-			}, fwkrh.PayloadMap{
-				"model":      "claude-sonnet-4-6",
-				"max_tokens": float64(1024),
-				"cache_salt": "test-salt-123",
-				"messages": []any{
-					map[string]any{"role": "user", "content": "Hello"},
+				Payload: fwkrh.PayloadMap{
+					"model":      "claude-sonnet-4-6",
+					"max_tokens": float64(1024),
+					"cache_salt": "test-salt-123",
+					"messages": []any{
+						map[string]any{"role": "user", "content": "Hello"},
+					},
 				},
-			}),
+			},
 		},
 		{
 			name:    "path from x-original-path header",
@@ -353,20 +360,21 @@ func TestAnthropicParser_ParseRequest(t *testing.T) {
 					map[string]any{"role": "user", "content": "Hello"},
 				},
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				MaxOutputTokens: ptr.To(int64(1024)),
 				Messages: &fwkrh.MessagesRequest{
 					Messages: []fwkrh.AnthropicMessage{
 						{Role: "user", Content: fwkrh.AnthropicContent{Raw: "Hello"}},
 					},
 				},
-			}, fwkrh.PayloadMap{
-				"model":      "claude-sonnet-4-6",
-				"max_tokens": float64(1024),
-				"messages": []any{
-					map[string]any{"role": "user", "content": "Hello"},
+				Payload: fwkrh.PayloadMap{
+					"model":      "claude-sonnet-4-6",
+					"max_tokens": float64(1024),
+					"messages": []any{
+						map[string]any{"role": "user", "content": "Hello"},
+					},
 				},
-			}),
+			},
 		},
 		{
 			name:    "empty messages array",
@@ -670,8 +678,7 @@ func TestAnthropicParser_ParseRequest_CountTokens(t *testing.T) {
 			if !got.SkipResponseProcessing {
 				t.Errorf("ParseRequest() SkipResponseProcessing = false, want true")
 			}
-			want := &fwkrh.InferenceRequestBody{}
-			want.SetPayload(fwkrh.RawPayload(tt.body))
+			want := &fwkrh.InferenceRequestBody{Payload: fwkrh.RawPayload(tt.body)}
 			if diff := cmp.Diff(want, got.Body, cmp.AllowUnexported(fwkrh.InferenceRequestBody{})); diff != "" {
 				t.Errorf("ParseRequest() body mismatch (-want +got):\n%s", diff)
 			}

@@ -27,7 +27,6 @@ import (
 
 	"cloud.google.com/go/aiplatform/apiv1beta1/aiplatformpb"
 	fwkrh "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/requesthandling"
-	testutil "github.com/llm-d/llm-d-router/pkg/epp/util/testing"
 	"google.golang.org/genproto/googleapis/api/httpbody"
 	"google.golang.org/protobuf/proto"
 	v1 "sigs.k8s.io/gateway-api-inference-extension/api/v1"
@@ -90,14 +89,15 @@ func TestParseRequest(t *testing.T) {
 				"content-type": "application/grpc",
 			},
 			wantResult: &fwkrh.ParseResult{
-				Body: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+				Body: &fwkrh.InferenceRequestBody{
 					ChatCompletions: &fwkrh.ChatCompletionsRequest{
 						Messages: []fwkrh.Message{
 							{Role: "user", Content: fwkrh.Content{Raw: "Hello"}},
 						},
 					},
-					Stream: true,
-				}, fwkrh.PayloadProto{Message: reqMsg}),
+					Stream:  true,
+					Payload: fwkrh.PayloadProto{Message: reqMsg},
+				},
 				SkipResponseProcessing: false,
 			},
 		},
@@ -109,11 +109,12 @@ func TestParseRequest(t *testing.T) {
 				"content-type": "application/grpc",
 			},
 			wantResult: &fwkrh.ParseResult{
-				Body: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+				Body: &fwkrh.InferenceRequestBody{
 					Responses: &fwkrh.ResponsesRequest{
 						Input: "Hello from stream raw predict",
 					},
-				}, fwkrh.PayloadProto{Message: streamRawPredictReqMsg}),
+					Payload: fwkrh.PayloadProto{Message: streamRawPredictReqMsg},
+				},
 				SkipResponseProcessing: false,
 			},
 		},
@@ -125,11 +126,12 @@ func TestParseRequest(t *testing.T) {
 				"content-type": "application/grpc",
 			},
 			wantResult: &fwkrh.ParseResult{
-				Body: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+				Body: &fwkrh.InferenceRequestBody{
 					Responses: &fwkrh.ResponsesRequest{
 						Input: "Hello from raw predict",
 					},
-				}, fwkrh.PayloadProto{Message: rawPredictReqMsg}),
+					Payload: fwkrh.PayloadProto{Message: rawPredictReqMsg},
+				},
 				SkipResponseProcessing: false,
 			},
 		},
@@ -138,7 +140,9 @@ func TestParseRequest(t *testing.T) {
 			body:    []byte{},
 			headers: map[string]string{":path": "/unsupported/path", "content-type": "application/grpc"},
 			wantResult: &fwkrh.ParseResult{
-				Body:                   testutil.WithPayload(&fwkrh.InferenceRequestBody{}, fwkrh.RawPayload([]byte{})),
+				Body: &fwkrh.InferenceRequestBody{
+					Payload: fwkrh.RawPayload([]byte{}),
+				},
 				SkipResponseProcessing: true,
 			},
 		},

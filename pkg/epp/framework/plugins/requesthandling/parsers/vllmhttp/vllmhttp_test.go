@@ -30,7 +30,6 @@ import (
 
 	fwkplugin "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/plugin"
 	fwkrh "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/requesthandling"
-	testutil "github.com/llm-d/llm-d-router/pkg/epp/util/testing"
 )
 
 func TestNewVllmHTTPParser(t *testing.T) {
@@ -57,13 +56,14 @@ func TestVllmHTTPParser_ParseRequest_Generate(t *testing.T) {
 			body: map[string]any{
 				"token_ids": []any{1, 2, 3},
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				Generate: &fwkrh.GenerateRequest{
 					TokenIDs: []uint32{1, 2, 3},
 				},
-			}, fwkrh.PayloadMap{
-				"token_ids": []any{float64(1), float64(2), float64(3)},
-			}),
+				Payload: fwkrh.PayloadMap{
+					"token_ids": []any{float64(1), float64(2), float64(3)},
+				},
+			},
 		},
 		{
 			name:    "generate request with token_ids and cache_salt",
@@ -72,15 +72,16 @@ func TestVllmHTTPParser_ParseRequest_Generate(t *testing.T) {
 				"token_ids":  []any{10, 20, 30},
 				"cache_salt": "abc123",
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				Generate: &fwkrh.GenerateRequest{
 					TokenIDs:  []uint32{10, 20, 30},
 					CacheSalt: "abc123",
 				},
-			}, fwkrh.PayloadMap{
-				"token_ids":  []any{float64(10), float64(20), float64(30)},
-				"cache_salt": "abc123",
-			}),
+				Payload: fwkrh.PayloadMap{
+					"token_ids":  []any{float64(10), float64(20), float64(30)},
+					"cache_salt": "abc123",
+				},
+			},
 		},
 		{
 			name:    "generate request with token_ids and sampling_params",
@@ -93,20 +94,21 @@ func TestVllmHTTPParser_ParseRequest_Generate(t *testing.T) {
 				},
 				"stream": true,
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				Generate: &fwkrh.GenerateRequest{
 					TokenIDs: []uint32{1, 2, 3},
 				},
 				Stream:          true,
 				MaxOutputTokens: ptr.To(int64(128)),
-			}, fwkrh.PayloadMap{
-				"token_ids": []any{float64(1), float64(2), float64(3)},
-				"sampling_params": map[string]any{
-					"temperature": 0.8,
-					"max_tokens":  float64(128),
+				Payload: fwkrh.PayloadMap{
+					"token_ids": []any{float64(1), float64(2), float64(3)},
+					"sampling_params": map[string]any{
+						"temperature": 0.8,
+						"max_tokens":  float64(128),
+					},
+					"stream": true,
 				},
-				"stream": true,
-			}),
+			},
 		},
 		{
 			name:    "generate request missing token_ids",
@@ -130,13 +132,14 @@ func TestVllmHTTPParser_ParseRequest_Generate(t *testing.T) {
 			body: map[string]any{
 				"token_ids": []any{5, 6, 7},
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				Generate: &fwkrh.GenerateRequest{
 					TokenIDs: []uint32{5, 6, 7},
 				},
-			}, fwkrh.PayloadMap{
-				"token_ids": []any{float64(5), float64(6), float64(7)},
-			}),
+				Payload: fwkrh.PayloadMap{
+					"token_ids": []any{float64(5), float64(6), float64(7)},
+				},
+			},
 		},
 		{
 			name:    "generate request with multimodal features",
@@ -155,7 +158,7 @@ func TestVllmHTTPParser_ParseRequest_Generate(t *testing.T) {
 					},
 				},
 			},
-			want: testutil.WithPayload(&fwkrh.InferenceRequestBody{
+			want: &fwkrh.InferenceRequestBody{
 				Generate: &fwkrh.GenerateRequest{
 					TokenIDs: []uint32{151644, 872, 198, 3838, 374, 279, 6722, 315, 9625, 30, 151645, 198, 151644, 77091, 198},
 					Features: &tokenization.MultiModalFeatures{
@@ -170,24 +173,25 @@ func TestVllmHTTPParser_ParseRequest_Generate(t *testing.T) {
 						},
 					},
 				},
-			}, fwkrh.PayloadMap{
-				"token_ids": []any{
-					float64(151644), float64(872), float64(198), float64(3838), float64(374), float64(279),
-					float64(6722), float64(315), float64(9625), float64(30), float64(151645), float64(198),
-					float64(151644), float64(77091), float64(198),
-				},
-				"features": map[string]any{
-					"mm_hashes": map[string]any{
-						"image": []any{"abc123hash", "def456hash"},
+				Payload: fwkrh.PayloadMap{
+					"token_ids": []any{
+						float64(151644), float64(872), float64(198), float64(3838), float64(374), float64(279),
+						float64(6722), float64(315), float64(9625), float64(30), float64(151645), float64(198),
+						float64(151644), float64(77091), float64(198),
 					},
-					"mm_placeholders": map[string]any{
-						"image": []any{
-							map[string]any{"offset": float64(1), "length": float64(3)},
-							map[string]any{"offset": float64(4), "length": float64(3)},
+					"features": map[string]any{
+						"mm_hashes": map[string]any{
+							"image": []any{"abc123hash", "def456hash"},
+						},
+						"mm_placeholders": map[string]any{
+							"image": []any{
+								map[string]any{"offset": float64(1), "length": float64(3)},
+								map[string]any{"offset": float64(4), "length": float64(3)},
+							},
 						},
 					},
 				},
-			}),
+			},
 		},
 	}
 
