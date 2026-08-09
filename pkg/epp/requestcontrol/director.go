@@ -315,7 +315,7 @@ func (d *Director) HandleRequest(ctx context.Context, reqCtx *handlers.RequestCo
 	if len(snapshotOfCandidatePods) == 0 {
 		return reqCtx, errcommon.Error{
 			Code: errcommon.ServiceUnavailable,
-			Msg:  "screeners eliminated all endpoint candidates",
+			Msg:  "failed to find endpoint candidates for serving the request",
 		}
 	}
 	// Prepare per request data by running DataProducer plugins.
