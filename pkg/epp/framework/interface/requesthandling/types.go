@@ -136,7 +136,7 @@ type InferenceRequestBody struct {
 	// that replace or edit Payload after parsing (e.g. a model-name rewrite) must set this to
 	// true themselves; it is not inferred or enforced -- see MutatePayloadMap for the one
 	// in-place-edit case the codebase needs today.
-	Mutated bool
+	Mutated bool `json:"-"`
 }
 
 // MutatePayloadMap edits Payload in place via fn when Payload is a PayloadMap, and marks the

@@ -182,6 +182,14 @@ func TestPrompt_MarshalJSON(t *testing.T) {
 	assert.Equal(t, `""`, string(empty))
 }
 
+func TestInferenceRequestBody_MarshalJSONExcludesMutationTracking(t *testing.T) {
+	body := InferenceRequestBody{Mutated: true}
+
+	encoded, err := json.Marshal(body)
+	require.NoError(t, err)
+	assert.NotContains(t, string(encoded), "Mutated")
+}
+
 func TestGenerateRequest_UnmarshalJSON(t *testing.T) {
 	tests := []struct {
 		name        string
