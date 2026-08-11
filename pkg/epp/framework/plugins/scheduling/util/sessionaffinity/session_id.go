@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -32,6 +31,7 @@ import (
 	"github.com/llm-d/llm-d-router/pkg/epp/framework/interface/plugin"
 	"github.com/llm-d/llm-d-router/pkg/epp/framework/interface/requestcontrol"
 	"github.com/llm-d/llm-d-router/pkg/epp/framework/interface/scheduling"
+	attrsession "github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/datalayer/attribute/session"
 )
 
 // DefaultSessionIDHeader is the header a SessionIDConfig reads when no sources
@@ -193,21 +193,19 @@ func (s *SessionIDHeader) resolveSessionID(ctx context.Context, request *schedul
 	return ""
 }
 
-// attributeString reads a request attribute as a string. Producers store their
-// identifier under a named string type (e.g. session.SessionID), so a plain
-// string type assertion would miss them; any value of string kind is accepted.
+// attributeString reads a request attribute as a SessionID. The reflect
+// fallback that used to live here (Kind() == reflect.String) was only
+// needed because the consumer had no other place to learn the producer's
+// declared type; with the typed attribute registry the consumer knows the
+// type is attrsession.SessionID and asserts directly.
 func attributeString(ctx context.Context, request *scheduling.InferenceRequest, key string) (string, bool) {
-	v, ok := request.GetAttribute(key)
+	sid, ok := scheduling.ReadRequestAttribute[attrsession.SessionID](request, key)
 	if !ok {
-		return "", false
-	}
-	rv := reflect.ValueOf(v)
-	if rv.Kind() != reflect.String {
-		log.FromContext(ctx).V(logging.DEBUG).Info("Session affinity - attribute is not a string, skipping source",
+		log.FromContext(ctx).V(logging.DEBUG).Info("Session affinity - attribute is not a SessionID, skipping source",
 			"attribute", key)
 		return "", false
 	}
-	return rv.String(), true
+	return string(sid), true
 }
 
 // Choose resolves the endpoint a request should be pinned to and records, for

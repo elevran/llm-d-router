@@ -16,16 +16,37 @@ limitations under the License.
 
 package scheduling
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/llm-d/llm-d-router/pkg/epp/framework/interface/plugin"
+)
 
 // PutAttribute stores value at key in the request's attribute store.
 // The backing store is lazily allocated on first write.
 // Callers must not write concurrently to the same request from multiple goroutines.
+//
+// New code should call PutAttributeKey with a declared DataKey so the call
+// site carries the producer's key. The string form remains for plugins that
+// synthesize keys outside the data-attribute registry (tests, plugins that
+// publish user-configured keys).
 func (r *InferenceRequest) PutAttribute(key string, value any) {
 	if r.attributes == nil {
 		r.attributes = &sync.Map{}
 	}
 	r.attributes.Store(key, value)
+}
+
+// PutAttributeKey stores value at dk.String() in the request's attribute
+// store. The DataKey form is the natural counterpart to *datalayer.Slot[T]
+// for the request-side store, which is any-backed rather than Cloneable-
+// backed; the slot's compile-time type still catches mismatches at the
+// assignment boundary.
+func (r *InferenceRequest) PutAttributeKey(dk plugin.DataKey, value any) {
+	if r.attributes == nil {
+		r.attributes = &sync.Map{}
+	}
+	r.attributes.Store(dk.String(), value)
 }
 
 // GetAttribute returns the value stored at key, or nil and false if absent.

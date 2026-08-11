@@ -27,6 +27,7 @@ import (
 	fwkdl "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/datalayer"
 	"github.com/llm-d/llm-d-router/pkg/epp/framework/interface/plugin"
 	"github.com/llm-d/llm-d-router/pkg/epp/framework/interface/scheduling"
+	attrsession "github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/datalayer/attribute/session"
 	"github.com/llm-d/llm-d-router/test/utils"
 )
 
@@ -393,7 +394,9 @@ func headerWithSources(t *testing.T, sources ...SessionIDSource) *SessionIDHeade
 }
 
 // namedSessionID mimics a producer publishing its identifier under a named
-// string type (e.g. session.SessionID) rather than a plain string.
+// string type that is NOT session.SessionID. The session-affinity consumer
+// asserts the declared type exactly, so values of this type should NOT
+// resolve — the registry catches this at startup.
 type namedSessionID string
 
 func TestResolveSessionID(t *testing.T) {
@@ -404,7 +407,7 @@ func TestResolveSessionID(t *testing.T) {
 	}
 	withAttr := func(value string) *scheduling.InferenceRequest {
 		req := &scheduling.InferenceRequest{Headers: map[string]string{}}
-		req.PutAttribute(attr, value)
+		req.PutAttribute(attr, attrsession.SessionID(value))
 		return req
 	}
 	// withAttrValue stores an arbitrary value under the attribute key, to cover
@@ -434,10 +437,16 @@ func TestResolveSessionID(t *testing.T) {
 			want:    "agent-42",
 		},
 		{
-			name:    "attribute stored as a named string type resolves",
+			name:    "attribute stored as the declared SessionID type resolves",
+			sources: []SessionIDSource{{Attribute: attr}},
+			request: withAttrValue(attrsession.SessionID("agent-99")),
+			want:    "agent-99",
+		},
+		{
+			name:    "attribute stored as a non-declared named string type is skipped",
 			sources: []SessionIDSource{{Attribute: attr}},
 			request: withAttrValue(namedSessionID("agent-99")),
-			want:    "agent-99",
+			want:    "",
 		},
 		{
 			name:    "attribute stored as a non-string value is skipped",
@@ -450,7 +459,7 @@ func TestResolveSessionID(t *testing.T) {
 			sources: []SessionIDSource{{Header: "x-session-id"}, {Attribute: attr}},
 			request: func() *scheduling.InferenceRequest {
 				req := withHeader("x-session-id", "from-header")
-				req.PutAttribute(attr, "from-attr")
+				req.PutAttribute(attr, attrsession.SessionID("from-attr"))
 				return req
 			}(),
 			want: "from-header",

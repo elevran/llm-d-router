@@ -18,6 +18,8 @@ package datalayer
 
 import (
 	"sync"
+
+	"github.com/llm-d/llm-d-router/pkg/epp/framework/interface/plugin"
 )
 
 // Cloneable types support cloning of the value.
@@ -41,7 +43,14 @@ func (d *DynamicAttribute) Clone() Cloneable {
 // AttributeMap is used to store flexible metadata or traits
 // across different aspects of an inference server.
 // Stored values must be Cloneable.
+//
+// Put is the canonical write entry point and is what Slot[T].Put calls.
+// PutKey on the concrete *Attributes is the DataKey-based convenience for
+// callers that hold a DataKey but no Slot (the slot is the recommended path
+// because it pins the value type at compile time).
 type AttributeMap interface {
+	// Put stores val under key. New code should call PutKey on *Attributes
+	// or use a *Slot[T] so the call site carries the declared DataKey.
 	Put(string, Cloneable)
 	Get(string) (Cloneable, bool)
 	Keys() []string
@@ -59,10 +68,22 @@ func NewAttributes() AttributeMap {
 }
 
 // Put adds or updates an attribute in the map.
+//
+// New code should call PutKey with a declared DataKey so the call site
+// carries the producer's key. The string form remains for plugins
+// (notably the dynamic-attribute installer and the custom-metrics
+// extractor) that synthesize keys outside the data-attribute registry.
 func (a *Attributes) Put(key string, value Cloneable) {
 	if value != nil {
 		a.data.Store(key, value) // TODO: Clone into map to ensure isolation
 	}
+}
+
+// PutKey stores val under dk.String(). It is the DataKey-based counterpart
+// to Put; the Slot writes through this method so the producer-side type
+// check (compile-time via Slot[T]) is the single source of value-safety.
+func (a *Attributes) PutKey(dk plugin.DataKey, value Cloneable) {
+	a.Put(dk.String(), value)
 }
 
 // Get retrieves an attribute by key, returning a cloned copy (or resolving it dynamically).

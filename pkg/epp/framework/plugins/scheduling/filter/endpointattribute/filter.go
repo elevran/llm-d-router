@@ -71,7 +71,10 @@ type parameters struct {
 }
 
 // compile-time type assertion
-var _ scheduling.Filter = &EndpointAttributeFilter{}
+var (
+	_ scheduling.Filter     = &EndpointAttributeFilter{}
+	_ plugin.ConsumerPlugin = &EndpointAttributeFilter{}
+)
 
 // EndpointAttributeFilterFactory defines the factory function for EndpointAttributeFilter.
 func EndpointAttributeFilterFactory(name string, rawParameters *json.Decoder, _ plugin.Handle) (plugin.Plugin, error) {
@@ -150,10 +153,16 @@ func (f *EndpointAttributeFilter) TypedName() plugin.TypedName {
 	return f.typedName
 }
 
-// Consumes returns the list of data that is consumed by the plugin.
-func (f *EndpointAttributeFilter) Consumes() map[string]any {
-	return map[string]any{
-		f.attribute: attrmetrics.ScalarMetricValue(0),
+// Consumes declares the filter's data dependency on the configured endpoint
+// attribute. The attribute is a user-supplied string (the multicluster or
+// custom-metrics key), so the DataKey is built with an empty producerName;
+// the registry compares by DataKey.String() so a matching producer must
+// declare the same form.
+func (f *EndpointAttributeFilter) Consumes() plugin.DataDependencies {
+	return plugin.DataDependencies{
+		Required: map[plugin.DataKey]any{
+			plugin.NewDataKey(f.attribute, ""): attrmetrics.ScalarMetricValue(0),
+		},
 	}
 }
 
