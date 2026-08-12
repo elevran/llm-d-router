@@ -16,12 +16,15 @@ limitations under the License.
 
 package gateway
 
+import (
+	reqcommon "github.com/llm-d/llm-d-router/pkg/common/request"
+)
+
 const (
 	ContentTypeHeader = "Content-Type"
-	// PeerTopologyHeader must match the default headerName in
-	// pkg/epp/framework/plugins/requestcontrol/responsereceived/topologystamp
-	// and peerTopologyHeaderName in pkg/epp/util/request/headers.go.
-	PeerTopologyHeader = "x-peer-topology"
+	// PeerTopologyHeader is reqcommon.PeerTopologyHeaderKey, the single
+	// definition topology-stamp-handler's default headerName must match.
+	PeerTopologyHeader = reqcommon.PeerTopologyHeaderKey
 
 	PhaseEncode  = "encode"
 	PhasePrefill = "prefill"
