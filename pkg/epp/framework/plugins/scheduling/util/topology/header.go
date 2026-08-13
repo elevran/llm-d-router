@@ -17,10 +17,26 @@ limitations under the License.
 package topology
 
 import (
+	"fmt"
 	"strings"
 
+	reqcommon "github.com/llm-d/llm-d-router/pkg/common/request"
 	attrtopology "github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/datalayer/attribute/topology"
 )
+
+// ValidateHeaderName rejects a peer-topology header name that diverges from
+// reqcommon.PeerTopologyHeaderKey. The coordinator's PrefillStep, decode
+// proxy, and internal-header stripping all key off that single hardcoded
+// name; a plugin configured with a different name would silently stop
+// exchanging peer topology with the coordinator instead of failing at
+// startup. Empty is allowed: it means "use the default" (topology-stamp
+// handler) or "no header, single-EPP mode" (topology-affinity filter/scorer).
+func ValidateHeaderName(name string) error {
+	if name != "" && !strings.EqualFold(name, reqcommon.PeerTopologyHeaderKey) {
+		return fmt.Errorf("peer topology header name %q is not supported; coordinator deployments require %q", name, reqcommon.PeerTopologyHeaderKey)
+	}
+	return nil
+}
 
 // Encode and Decode use a hand-rolled key=value wire format rather than JSON.
 // JSON would be a smaller diff (struct tags plus Marshal/Unmarshal, with

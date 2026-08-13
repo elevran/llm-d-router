@@ -68,6 +68,9 @@ func Factory(name string, rawParameters *json.Decoder, _ fwkplugin.Handle) (fwkp
 			return nil, fmt.Errorf("failed to parse the parameters of the '%s' handler - %w", PluginType, err)
 		}
 	}
+	if err := topoutil.ValidateHeaderName(params.HeaderName); err != nil {
+		return nil, fmt.Errorf("invalid configuration for '%s' handler: %w", PluginType, err)
+	}
 	if params.HeaderName == "" {
 		params.HeaderName = defaultHeaderName
 	}
