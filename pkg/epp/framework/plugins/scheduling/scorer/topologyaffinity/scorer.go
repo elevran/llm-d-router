@@ -72,6 +72,9 @@ func Factory(name string, rawParameters *json.Decoder, _ fwkplugin.Handle) (fwkp
 			return nil, fmt.Errorf("failed to parse the parameters of the '%s' scorer - %w", ScorerType, err)
 		}
 	}
+	if err := topoutil.ValidateHeaderName(params.PeerTopologyHeader); err != nil {
+		return nil, fmt.Errorf("invalid configuration for '%s' scorer: %w", ScorerType, err)
+	}
 	if name == "" {
 		name = ScorerType
 	}

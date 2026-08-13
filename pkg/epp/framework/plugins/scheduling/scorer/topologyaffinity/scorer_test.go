@@ -152,3 +152,8 @@ func TestFactory_PeerTopologyHeader(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, "x-peer-topology", s.peerTopologyHeader)
 }
+
+func TestFactory_PeerTopologyHeaderRejectsNonDefault(t *testing.T) {
+	_, err := Factory("test", fwkplugin.StrictDecoder([]byte(`{"peerTopologyHeader": "x-custom-topology"}`)), nil)
+	require.Error(t, err)
+}

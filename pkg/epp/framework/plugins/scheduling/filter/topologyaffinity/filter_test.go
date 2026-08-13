@@ -164,6 +164,11 @@ func TestFactory_PeerTopologyHeader(t *testing.T) {
 	assert.Equal(t, "x-peer-topology", f.peerTopologyHeader)
 }
 
+func TestFactory_PeerTopologyHeaderRejectsNonDefault(t *testing.T) {
+	_, err := Factory("test", fwkplugin.StrictDecoder([]byte(`{"peerTopologyHeader": "x-custom-topology"}`)), nil)
+	require.Error(t, err)
+}
+
 func TestFactory_InvalidMinAffinity(t *testing.T) {
 	_, err := Factory("test", fwkplugin.StrictDecoder([]byte(`{"minAffinity": "datacenter"}`)), nil)
 	assert.Error(t, err)
