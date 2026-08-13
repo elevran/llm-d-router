@@ -132,10 +132,7 @@ func TestFactory_Defaults(t *testing.T) {
 	assert.Equal(t, PluginType, h.TypedName().Name)
 }
 
-func TestFactory_CustomHeaderName(t *testing.T) {
-	p, err := Factory("test", fwkplugin.StrictDecoder([]byte(`{"headerName": "x-custom-topology"}`)), nil)
-	require.NoError(t, err)
-	h, ok := p.(*Handler)
-	require.True(t, ok)
-	assert.Equal(t, "x-custom-topology", h.headerName)
+func TestFactory_CustomHeaderNameRejected(t *testing.T) {
+	_, err := Factory("test", fwkplugin.StrictDecoder([]byte(`{"headerName": "x-custom-topology"}`)), nil)
+	require.Error(t, err)
 }
