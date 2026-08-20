@@ -114,7 +114,7 @@ import (
 	"github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/requestcontrol/requestheader/agentidentity"
 	"github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/requestcontrol/requestheader/outlenbucket"
 	"github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/requestcontrol/screener/disaggregatedsetrollout"
-	"github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/requestcontrol/screener/envoysubset"
+	"github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/requestcontrol/screener/gwsubset"
 	testresponsereceived "github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/requestcontrol/test/responsereceived"
 	"github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/requesthandling/parsers/anthropic"
 	"github.com/llm-d/llm-d-router/pkg/epp/framework/plugins/requesthandling/parsers/openai"
@@ -825,7 +825,7 @@ func (r *Runner) parseConfigurationPhaseTwo(ctx context.Context, rawConfig *conf
 	// gating it on the CLI flag (not the config file) keeps the user from
 	// enabling it in two places at once.
 	if !disableEndpointSubsetFilter {
-		r.requestControlConfig.AddPlugins(envoysubset.NewScreener())
+		r.requestControlConfig.AddPlugins(gwsubset.NewScreener())
 	}
 
 	// Let plugins declare their datalayer source/extractor dependencies before Configure().

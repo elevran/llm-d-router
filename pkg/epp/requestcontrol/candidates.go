@@ -40,7 +40,7 @@ const (
 
 	// allEndpointsCacheKey is the single cache key used now that the Delegate
 	// no longer varies its result based on request metadata. The Envoy subset
-	// filter moved to the envoysubset Screener, which observes request
+	// filter moved to the gwsubset Screener, which observes request
 	// metadata during screening.
 	allEndpointsCacheKey = "__all_endpoints__"
 )
@@ -60,8 +60,8 @@ func NewDatastoreEndpointCandidates(ds Datastore) *DatastoreEndpointCandidates {
 }
 
 // Locate returns every endpoint candidate in the Datastore. Per-request
-// filtering (e.g. Envoy's destination-endpoint-subset hint) is handled by
-// the envoysubset Screener, which runs after Locate.
+// filtering (e.g. the destination-endpoint-subset hint) is handled by
+// the gwsubset Screener, which runs after Locate.
 func (d *DatastoreEndpointCandidates) Locate(_ context.Context, _ map[string]any) []fwkdl.Endpoint {
 	return d.datastore.PodList(datastore.AllPodsPredicate)
 }

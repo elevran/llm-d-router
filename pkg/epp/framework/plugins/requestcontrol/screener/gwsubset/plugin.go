@@ -14,14 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package envoysubset implements a request-control Screener that narrows the
-// candidate endpoint set to the subset indicated by Envoy's dynamic metadata
-// under envoy.lb.subset_hint / x-gateway-destination-endpoint-subset.
+// Package gwsubset implements a request-control Screener that narrows the
+// candidate endpoint set to the subset indicated by the inference-gateway
+// dynamic-metadata key envoy.lb.subset_hint, surfaced to the EPP via the
+// ext_proc header x-gateway-destination-endpoint-subset.
 //
 // The plugin is a system built-in: the runner registers it directly on
 // startup, gated only by the --disable-endpoint-subset-filter CLI flag. It is
 // not exposed via the plugin registry and is not user-configurable.
-package envoysubset
+package gwsubset
 
 import (
 	"context"
@@ -40,10 +41,10 @@ import (
 
 // PluginType is the plugin type name. Reserved for diagnostic surfaces even
 // though the plugin is not registered in the global plugin registry.
-const PluginType = "envoy-subset-screener"
+const PluginType = "gw-subset-screener"
 
-// Screener narrows the endpoint candidate set to the addresses Envoy supplied
-// via the destination-endpoint-subset dynamic metadata.
+// Screener narrows the endpoint candidate set to the addresses supplied via
+// the destination-endpoint-subset dynamic metadata.
 type Screener struct {
 	typedName string
 }
@@ -53,7 +54,7 @@ var (
 	_ fwkrc.Screener   = (*Screener)(nil)
 )
 
-// NewScreener returns a new envoysubset Screener.
+// NewScreener returns a new gwsubset Screener.
 func NewScreener() *Screener {
 	return &Screener{typedName: PluginType}
 }
