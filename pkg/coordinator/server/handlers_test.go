@@ -303,7 +303,8 @@ func TestHandleInference_StripsClientSuppliedInternalHeaders(t *testing.T) {
 	// later step trusts it as coordinator-generated.
 	step := &capturingStep{}
 	p := pipeline.New([]pipeline.Step{step})
-	srv, err := New(config.ServerConfig{}, p)
+	gw := gateway.NewWithTransport(&http.Transport{}, stubGatewayURL)
+	srv, err := New(config.ServerConfig{}, p, gw)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
