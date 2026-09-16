@@ -105,6 +105,32 @@ func TestServeMetricsHTTP(t *testing.T) {
 	require.NoError(t, <-errCh)
 }
 
+// TestServeMetricsHTTP_NilListener covers the lis == nil branch that main()
+// always takes in production, where serveMetrics binds port itself instead
+// of serving on a caller-supplied listener.
+func TestServeMetricsHTTP_NilListener(t *testing.T) {
+	port, err := fwknet.GetFreePort()
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	errCh := make(chan error, 1)
+	go func() { errCh <- serveMetrics(ctx, port, "", nil) }()
+
+	client := &http.Client{Timeout: 2 * time.Second}
+	require.Eventually(t, func() bool {
+		resp, err := client.Get("http://127.0.0.1:" + strconv.Itoa(port) + "/metrics")
+		if err != nil {
+			return false
+		}
+		defer resp.Body.Close()
+		return resp.StatusCode == http.StatusOK
+	}, 2*time.Second, 20*time.Millisecond)
+
+	cancel()
+	require.NoError(t, <-errCh)
+}
+
 func TestServeMetricsHTTPS(t *testing.T) {
 	certDir := t.TempDir()
 	writeMetricsCertificate(t, certDir)
@@ -187,6 +213,40 @@ func TestRun_MetricsDisabled_DrainsCleanlyOnCancel(t *testing.T) {
 
 	done := make(chan error, 1)
 	go func() { done <- run(ctx, srv, cfg, lis) }()
+
+	waitForDial(t, listenAddr, 2*time.Second)
+	cancel()
+
+	select {
+	case err := <-done:
+		require.NoError(t, err)
+	case <-time.After(5 * time.Second):
+		t.Fatal("run did not return within 5s after cancel")
+	}
+}
+
+// TestRun_NilListener_DrainsCleanlyOnCancel covers the lis == nil branch that
+// main() always takes in production, where run binds cfg.ListenAddr itself
+// instead of serving on a caller-supplied listener.
+func TestRun_NilListener_DrainsCleanlyOnCancel(t *testing.T) {
+	port, err := fwknet.GetFreePort()
+	require.NoError(t, err)
+	listenAddr := "127.0.0.1:" + strconv.Itoa(port)
+
+	cfg := config.ServerConfig{
+		ListenAddr:      listenAddr,
+		ShutdownTimeout: time.Second,
+		ReadTimeout:     time.Second,
+		WriteTimeout:    time.Second,
+		MetricsPort:     0,
+	}
+	srv := newTestServer(t, listenAddr)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	done := make(chan error, 1)
+	go func() { done <- run(ctx, srv, cfg, nil) }()
 
 	waitForDial(t, listenAddr, 2*time.Second)
 	cancel()

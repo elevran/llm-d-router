@@ -98,18 +98,17 @@ dataLayer:
         - pluginRef: metrics-extractor
 `, endpointsPath)
 
-	// Reserve live listeners for the ports this test dials (grpc, health)
-	// instead of picking a port number and closing the listener: the runner
-	// binds these listeners directly, so no window exists in which another
-	// process can take the port between selection and bind. Metrics is never
-	// dialed here, so it can bind an OS-assigned port with no test-side
-	// bookkeeping.
+	// Reserve live listeners so the runner binds directly with no gap between
+	// port selection and use; metrics isn't dialed here so it can still use an
+	// OS-assigned port.
 	grpcListener, err := fwknet.ReserveListener()
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = grpcListener.Close() })
 	grpcPort := grpcListener.Addr().(*net.TCPAddr).Port
 
 	healthListener, err := fwknet.ReserveListener()
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = healthListener.Close() })
 	healthPort := healthListener.Addr().(*net.TCPAddr).Port
 
 	opts := runserver.NewOptions()
@@ -285,8 +284,11 @@ dataLayer:
 
 	// decoyListener occupies a port that opts.GRPCPort/opts.GRPCHealthPort will
 	// name. If runWithFileDiscovery bound by number instead of using the
-	// injected listeners, net.Listen on that port would fail here.
-	decoyListener, err := fwknet.ReserveListener()
+	// injected listeners, net.Listen on that port would fail here. Bind the
+	// wildcard address, the same one runnable.GRPCServer binds, so the
+	// collision is guaranteed on macOS as well as Linux: fwknet.ReserveListener
+	// binds only 127.0.0.1, which does not shadow [::]:<port> on macOS.
+	decoyListener, err := net.Listen("tcp", ":0")
 	require.NoError(t, err)
 	defer decoyListener.Close()
 	decoyPort := decoyListener.Addr().(*net.TCPAddr).Port
@@ -329,9 +331,22 @@ dataLayer:
 		time.Sleep(50 * time.Millisecond)
 	}
 
-	extProcConn, err := net.DialTimeout("tcp", grpcListener.Addr().String(), time.Second)
+	cc, err := grpc.NewClient(grpcListener.Addr().String(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.NoError(t, err)
+	defer cc.Close()
+	processCtx, processCancel := context.WithTimeout(ctx, time.Second)
+	defer processCancel()
+	process, err := pb.NewExternalProcessorClient(cc).Process(processCtx)
+	require.NoError(t, err)
+	err = process.Send(&pb.ProcessingRequest{
+		Request: &pb.ProcessingRequest_RequestBody{
+			RequestBody: &pb.HttpBody{EndOfStream: true},
+		},
+	})
+	if err == nil {
+		_, err = process.Recv()
+	}
 	require.NoError(t, err, "ext_proc should be serving on the injected listener, not the decoy port")
-	_ = extProcConn.Close()
 
 	cancel()
 	select {

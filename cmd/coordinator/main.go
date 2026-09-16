@@ -212,6 +212,9 @@ func serveMetrics(ctx context.Context, port int, certDir string, lis net.Listene
 	if serveTLS {
 		tlsConfig, err := metricsTLSConfig(ctx, certDir)
 		if err != nil {
+			if lis != nil {
+				_ = lis.Close()
+			}
 			return err
 		}
 		srv.TLSConfig = tlsConfig

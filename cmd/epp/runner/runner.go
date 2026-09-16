@@ -191,10 +191,8 @@ type Runner struct {
 	draining         *atomic.Bool
 
 	// grpcListener and healthListener are optional pre-bound listeners for the
-	// runWithFileDiscovery path. When set, the ext_proc and health servers serve
-	// on them directly instead of binding opts.GRPCPort / opts.GRPCHealthPort
-	// themselves, closing the gap between picking a free port and binding it
-	// during which another process can take that port.
+	// runWithFileDiscovery path; when set, the ext_proc and health servers serve
+	// on them instead of binding opts.GRPCPort / opts.GRPCHealthPort.
 	grpcListener   net.Listener
 	healthListener net.Listener
 }
