@@ -1,5 +1,6 @@
 /*
 Copyright 2025 The Kubernetes Authors.
+Copyright 2026 The llm-d Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -355,7 +356,7 @@ func (d *Director) repackage(ctx context.Context, reqCtx *handlers.RequestContex
 		reqCtx.RequestSize = len(reqCtx.Request.RawBody)
 		return nil
 	}
-	marshaler, ok := inferenceRequestBody.Payload.(fwkrh.Marshaler)
+	marshaler, ok := inferenceRequestBody.WirePayload().(fwkrh.Marshaler)
 	if !ok {
 		// Payload forwarded unchanged (raw or proto).
 		reqCtx.RequestSize = len(reqCtx.Request.RawBody)
