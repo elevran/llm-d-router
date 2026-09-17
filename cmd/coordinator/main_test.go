@@ -52,18 +52,20 @@ func newTestServer(t *testing.T, listenAddr string) *server.Server {
 	return srv
 }
 
-func waitForDial(t *testing.T, addr string, timeout time.Duration) {
+// waitForHealthz polls /healthz. A successful TCP dial precedes
+// http.Server.Serve dispatching, and srv.Shutdown on an unstarted
+// http.Server returns nil, so the socket alone is not a readiness signal.
+func waitForHealthz(t *testing.T, addr string, timeout time.Duration) {
 	t.Helper()
-	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
-		conn, err := net.DialTimeout("tcp", addr, 100*time.Millisecond)
-		if err == nil {
-			_ = conn.Close()
-			return
+	client := &http.Client{Timeout: 200 * time.Millisecond}
+	require.Eventually(t, func() bool {
+		resp, err := client.Get("http://" + addr + "/healthz")
+		if err != nil {
+			return false
 		}
-		time.Sleep(20 * time.Millisecond)
-	}
-	t.Fatalf("no listener came up on %s within %s", addr, timeout)
+		defer resp.Body.Close()
+		return resp.StatusCode == http.StatusOK
+	}, timeout, 20*time.Millisecond, "coordinator /healthz on %s never returned 200", addr)
 }
 
 func writeMetricsCertificate(t *testing.T, dir string) {
@@ -214,7 +216,7 @@ func TestRun_MetricsDisabled_DrainsCleanlyOnCancel(t *testing.T) {
 	done := make(chan error, 1)
 	go func() { done <- run(ctx, srv, cfg, lis) }()
 
-	waitForDial(t, listenAddr, 2*time.Second)
+	waitForHealthz(t, listenAddr, 2*time.Second)
 	cancel()
 
 	select {
@@ -248,7 +250,7 @@ func TestRun_NilListener_DrainsCleanlyOnCancel(t *testing.T) {
 	done := make(chan error, 1)
 	go func() { done <- run(ctx, srv, cfg, nil) }()
 
-	waitForDial(t, listenAddr, 2*time.Second)
+	waitForHealthz(t, listenAddr, 2*time.Second)
 	cancel()
 
 	select {
