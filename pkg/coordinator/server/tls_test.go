@@ -170,6 +170,16 @@ func TestServe_TLSMinVersionRejectsOlderClient(t *testing.T) {
 	require.Error(t, err, "TLS 1.2 client must be rejected when the minimum is TLS 1.3")
 }
 
+func TestServe_TLSMinVersionDowngradeIgnored(t *testing.T) {
+	addr := serve(t, config.ServerConfig{SecureServing: true, TLSMinVersion: "VersionTLS10"})
+
+	_, err := tls.Dial("tcp", addr, &tls.Config{
+		InsecureSkipVerify: true, //nolint:gosec // self-signed cert under test
+		MaxVersion:         tls.VersionTLS10,
+	})
+	require.Error(t, err, "TLS 1.0 client must still be rejected when tls_min_version requests a downgrade")
+}
+
 func TestNew_RejectsInvalidTLSProfile(t *testing.T) {
 	tests := []struct {
 		name string
