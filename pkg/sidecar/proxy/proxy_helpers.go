@@ -323,3 +323,15 @@ func isRetryableStatus(statusCode int) bool {
 		statusCode == http.StatusServiceUnavailable ||
 		statusCode == http.StatusGatewayTimeout
 }
+
+// CloseBody closes an HTTP response body, discarding the error. Close on a
+// body being drained for a completed request has no recovery action.
+func CloseBody(body io.ReadCloser) {
+	_ = body.Close()
+}
+
+// WriteAll writes b to w, discarding the error. The caller has already sent
+// headers and status, so there is no recovery action for a write failure.
+func WriteAll(w io.Writer, b []byte) {
+	_, _ = w.Write(b)
+}
