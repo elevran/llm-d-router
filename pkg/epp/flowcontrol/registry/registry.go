@@ -52,6 +52,16 @@ func (s *occupancyStats) add(lenDelta, byteSizeDelta int64) {
 	s.byteSize.Add(byteSizeDelta)
 }
 
+// nonNegativeUint64 converts a counter to uint64, clamping to 0 instead of wrapping on a
+// negative value. The counters are non-negative by construction (see occupancyStats), but that
+// invariant is not visible to the compiler at the conversion site.
+func nonNegativeUint64(v int64) uint64 {
+	if v < 0 {
+		return 0
+	}
+	return uint64(v)
+}
+
 // flowState tracks the lifecycle and usage of a specific flow instance.
 type flowState struct {
 	leasedState
@@ -433,8 +443,8 @@ func (fr *FlowRegistry) CapacitySnapshot(priority int) (contracts.CapacitySnapsh
 // globalCapacityDimension returns the registry-wide occupancy against the configured global limits.
 func (fr *FlowRegistry) globalCapacityDimension() contracts.CapacityDimension {
 	return contracts.CapacityDimension{
-		Len:              uint64(fr.totals.len.Load()),
-		ByteSize:         uint64(fr.totals.byteSize.Load()),
+		Len:              nonNegativeUint64(fr.totals.len.Load()),
+		ByteSize:         nonNegativeUint64(fr.totals.byteSize.Load()),
 		CapacityRequests: fr.config.MaxRequests,
 		CapacityBytes:    fr.config.MaxBytes,
 	}

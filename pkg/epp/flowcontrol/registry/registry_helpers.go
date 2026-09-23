@@ -69,8 +69,8 @@ type priorityBand struct {
 // capacityDimension returns this band's current occupancy against its configured limits.
 func (b *priorityBand) capacityDimension() contracts.CapacityDimension {
 	return contracts.CapacityDimension{
-		Len:              uint64(b.stats.len.Load()),
-		ByteSize:         uint64(b.stats.byteSize.Load()),
+		Len:              nonNegativeUint64(b.stats.len.Load()),
+		ByteSize:         nonNegativeUint64(b.stats.byteSize.Load()),
 		CapacityRequests: b.config.MaxRequests,
 		CapacityBytes:    b.config.MaxBytes,
 	}

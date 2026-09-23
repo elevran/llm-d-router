@@ -286,6 +286,14 @@ func TestFlowRegistry_Stats(t *testing.T) {
 
 }
 
+func TestNonNegativeUint64(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, uint64(0), nonNegativeUint64(0))
+	assert.Equal(t, uint64(42), nonNegativeUint64(42))
+	assert.Equal(t, uint64(0), nonNegativeUint64(-1), "a negative counter must clamp to 0, not wrap")
+}
+
 // --- Garbage Collection Tests ---
 
 func TestFlowRegistry_GarbageCollection(t *testing.T) {

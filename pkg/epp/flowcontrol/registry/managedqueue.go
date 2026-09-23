@@ -18,6 +18,7 @@ limitations under the License.
 package registry
 
 import (
+	"math"
 	"sync"
 
 	"github.com/go-logr/logr"
@@ -198,7 +199,7 @@ func (mq *managedQueue) applyAndPropagateLocked(mutate func()) {
 
 	afterLen := mq.queue.Len()
 	lenDelta := int64(afterLen - beforeLen)
-	byteSizeDelta := int64(mq.queue.ByteSize()) - int64(beforeBytes)
+	byteSizeDelta := clampToInt64(mq.queue.ByteSize()) - clampToInt64(beforeBytes)
 	if lenDelta == 0 && byteSizeDelta == 0 {
 		return
 	}
@@ -217,6 +218,15 @@ func (mq *managedQueue) applyAndPropagateLocked(mutate func()) {
 	// These updates are lock-free and eventually consistent.
 	mq.bandStats.add(lenDelta, byteSizeDelta)
 	mq.registryStats.add(lenDelta, byteSizeDelta)
+}
+
+// clampToInt64 converts a byte-size measurement to int64, clamping to math.MaxInt64 instead of
+// wrapping if it exceeds the signed range.
+func clampToInt64(v uint64) int64 {
+	if v > math.MaxInt64 {
+		return math.MaxInt64
+	}
+	return int64(v)
 }
 
 // --- `flowQueueAccessor` ---
