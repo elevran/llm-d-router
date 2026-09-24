@@ -54,3 +54,14 @@ func TestInt(t *testing.T) {
 	assert.Equal(t, math.MaxInt, clamp.Int(math.MaxUint64),
 		"a value beyond the signed range must clamp to math.MaxInt, not wrap")
 }
+
+func TestUint32(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, uint32(0), clamp.Uint32(0))
+	assert.Equal(t, uint32(42), clamp.Uint32(42))
+	assert.Equal(t, uint32(0), clamp.Uint32(-1), "a negative value must clamp to 0, not wrap")
+	assert.Equal(t, uint32(math.MaxUint32), clamp.Uint32(int64(math.MaxUint32)))
+	assert.Equal(t, uint32(math.MaxUint32), clamp.Uint32(int64(math.MaxUint32)+1),
+		"a value beyond the unsigned 32-bit range must clamp to math.MaxUint32, not wrap")
+}

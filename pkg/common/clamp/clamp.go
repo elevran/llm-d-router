@@ -43,3 +43,15 @@ func Int(v uint64) int {
 	}
 	return int(v)
 }
+
+// Uint32 converts a signed integer to uint32, clamping to 0 if v is negative and to
+// math.MaxUint32 if v exceeds the unsigned 32-bit range.
+func Uint32[T int | int32 | int64](v T) uint32 {
+	if v < 0 {
+		return 0
+	}
+	if uint64(v) > math.MaxUint32 {
+		return math.MaxUint32
+	}
+	return uint32(v)
+}

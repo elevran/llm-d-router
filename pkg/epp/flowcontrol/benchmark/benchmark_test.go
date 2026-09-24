@@ -330,7 +330,7 @@ func BenchmarkFlowController_FullPath(b *testing.B) {
 		for pb.Next() {
 			id := globalReqID.Add(1)
 			reqID := fmt.Sprintf("req-%d", id)
-			priority := int(id) % numPriorities
+			priority := clamp.Int(id) % numPriorities
 
 			// 1. Admission: FlowController gates the request.
 			fcReq := &benchRequest{
