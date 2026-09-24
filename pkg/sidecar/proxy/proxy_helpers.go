@@ -113,10 +113,10 @@ func (s *Server) startHTTP(ctx context.Context) error {
 			}
 		}
 
-		// MinVersion is a literal so gosec/CodeQL can resolve it statically; the
-		// configured value applies only as an upgrade. An empty suite list
-		// leaves CipherSuites nil, which selects the crypto/tls default,
-		// matching the coordinator and EPP.
+		// MinVersion is a literal so gosec/CodeQL can resolve it statically;
+		// Options.Complete already rejects a configured version below TLS 1.2.
+		// An empty suite list leaves CipherSuites nil, which selects the
+		// crypto/tls default, matching the coordinator and EPP.
 		minVersion := uint16(tls.VersionTLS12)
 		if s.config.TLSMinVersion > tls.VersionTLS12 {
 			minVersion = s.config.TLSMinVersion

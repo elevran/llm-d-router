@@ -170,16 +170,6 @@ func TestServe_TLSMinVersionRejectsOlderClient(t *testing.T) {
 	require.Error(t, err, "TLS 1.2 client must be rejected when the minimum is TLS 1.3")
 }
 
-func TestServe_TLSMinVersionDowngradeIgnored(t *testing.T) {
-	addr := serve(t, config.ServerConfig{SecureServing: true, TLSMinVersion: "VersionTLS10"})
-
-	_, err := tls.Dial("tcp", addr, &tls.Config{
-		InsecureSkipVerify: true, //nolint:gosec // self-signed cert under test
-		MaxVersion:         tls.VersionTLS10,
-	})
-	require.Error(t, err, "TLS 1.0 client must still be rejected when tls_min_version requests a downgrade")
-}
-
 func TestNew_RejectsInvalidTLSProfile(t *testing.T) {
 	tests := []struct {
 		name string
@@ -188,6 +178,14 @@ func TestNew_RejectsInvalidTLSProfile(t *testing.T) {
 		{
 			name: "unknown TLS version",
 			cfg:  config.ServerConfig{SecureServing: true, TLSMinVersion: "VersionTLS99"},
+		},
+		{
+			name: "TLS 1.0 below the floor",
+			cfg:  config.ServerConfig{SecureServing: true, TLSMinVersion: "VersionTLS10"},
+		},
+		{
+			name: "TLS 1.1 below the floor",
+			cfg:  config.ServerConfig{SecureServing: true, TLSMinVersion: "VersionTLS11"},
 		},
 		{
 			name: "unknown cipher suite",
@@ -207,6 +205,24 @@ func TestParseTLSProfile_EmptyUsesTLS12(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, uint16(tls.VersionTLS12), profile.minVersion, "empty tls_min_version must use TLS 1.2")
 	require.Empty(t, profile.cipherSuites, "empty tls_cipher_suites must leave the crypto/tls default")
+}
+
+func TestParseTLSProfile_RejectsBelowFloor(t *testing.T) {
+	tests := []struct {
+		name            string
+		minVersion      string
+		wantErrContains string
+	}{
+		{name: "VersionTLS10", minVersion: "VersionTLS10", wantErrContains: "below the TLS 1.2 minimum"},
+		{name: "VersionTLS11", minVersion: "VersionTLS11", wantErrContains: "below the TLS 1.2 minimum"},
+		{name: "unknown version", minVersion: "TLS1.2", wantErrContains: "unknown TLS version"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := parseTLSProfile(tt.minVersion, nil)
+			require.ErrorContains(t, err, tt.wantErrContains)
+		})
+	}
 }
 
 func TestServe_DefaultMinVersionRejectsTLS11Client(t *testing.T) {
