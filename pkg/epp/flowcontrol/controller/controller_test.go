@@ -37,6 +37,7 @@ import (
 	"k8s.io/utils/clock"
 	testclock "k8s.io/utils/clock/testing"
 
+	"github.com/llm-d/llm-d-router/pkg/common/clamp"
 	"github.com/llm-d/llm-d-router/pkg/epp/flowcontrol/contracts"
 	"github.com/llm-d/llm-d-router/pkg/epp/flowcontrol/contracts/mocks"
 	"github.com/llm-d/llm-d-router/pkg/epp/flowcontrol/controller/internal"
@@ -1037,15 +1038,6 @@ func TestFlowController_WorkerManagement(t *testing.T) {
 	})
 }
 
-// nonNegativeUint64 converts a queue length to uint64, clamping to 0 instead of wrapping if the
-// value is negative.
-func nonNegativeUint64(v int) uint64 {
-	if v < 0 {
-		return 0
-	}
-	return uint64(v)
-}
-
 // Helper function to create a realistic mock registry environment for integration/concurrency tests.
 func setupRegistryForConcurrency(t *testing.T, flowKey flowcontrol.FlowKey) *mockRegistryClient {
 	t.Helper()
@@ -1082,7 +1074,7 @@ func setupRegistryForConcurrency(t *testing.T, flowKey flowcontrol.FlowKey) *moc
 		},
 		// Configure capacity reporting based on the live state of the mock queues.
 		CapacitySnapshotFunc: func(int) (contracts.CapacitySnapshot, error) {
-			queueLen := nonNegativeUint64(currentQueue.Len())
+			queueLen := clamp.Uint64(currentQueue.Len())
 			return contracts.CapacitySnapshot{
 				Global: contracts.CapacityDimension{
 					Len:      queueLen,

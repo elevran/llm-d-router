@@ -18,7 +18,6 @@ package queue
 
 import (
 	"fmt"
-	"math"
 	"sort"
 	"sync"
 	"sync/atomic"
@@ -28,6 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/llm-d/llm-d-router/pkg/common/clamp"
 	"github.com/llm-d/llm-d-router/pkg/epp/flowcontrol/contracts"
 	"github.com/llm-d/llm-d-router/pkg/epp/framework/interface/flowcontrol"
 	"github.com/llm-d/llm-d-router/pkg/epp/framework/interface/flowcontrol/mocks"
@@ -326,15 +326,6 @@ func TestPriorityQueue_Drain(t *testing.T) {
 	})
 }
 
-// capToInt converts an atomic counter to int, clamping to math.MaxInt instead of wrapping if it
-// exceeds the signed range.
-func capToInt(v uint64) int {
-	if v > math.MaxInt {
-		return math.MaxInt
-	}
-	return int(v)
-}
-
 // TestPriorityQueue_Concurrency drives a mix of concurrent operations and verifies that the
 // accounting stays consistent: items drained at the end must equal initial + adds - removes.
 func TestPriorityQueue_Concurrency(t *testing.T) {
@@ -400,7 +391,7 @@ func TestPriorityQueue_Concurrency(t *testing.T) {
 	for _, item := range drained {
 		require.True(t, item.Handle().IsInvalidated(), "every drained handle must be invalidated")
 	}
-	assert.Equal(t, int(initialItems)+capToInt(adds.Load())-capToInt(removes.Load()), len(drained),
+	assert.Equal(t, int(initialItems)+clamp.Int(adds.Load())-clamp.Int(removes.Load()), len(drained),
 		"drained count must equal initial + adds - removes")
 	assert.Zero(t, q.Len())
 	assert.Zero(t, q.ByteSize())
