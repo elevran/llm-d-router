@@ -67,8 +67,8 @@ const (
 	inputTokensField         = "input_tokens"
 	completionTokensField    = "completion_tokens"
 	outputTokensField        = "output_tokens"
-	promptTokensDetailsField = "prompt_tokens_details"
-	inputTokensDetailsField  = "input_tokens_details"
+	promptTokensDetailsField = "prompt_tokens_details" //nolint:gosec // G101: JSON field name, not a credential
+	inputTokensDetailsField  = "input_tokens_details"  //nolint:gosec // G101: JSON field name, not a credential
 	cachedTokensField        = "cached_tokens"
 	totalTokensField         = "total_tokens"
 
