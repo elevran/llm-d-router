@@ -270,6 +270,11 @@ func (s *ReplaceMediaURLsStep) download(ctx context.Context, rawURL string) ([]b
 		return nil, "", err
 	}
 	call := coordmetrics.StartUpstreamCall(coordmetrics.UpstreamReplaceMediaURLs)
+	// rawURL's host is checked against allowed_domains above, and s.client's
+	// dialer (addressGuard.dialControl) blocks the resolved IP if it is
+	// loopback, link-local, CGNAT, or private, closing the DNS-rebinding gap
+	// a hostname check alone would miss.
+	// codeql[go/request-forgery]
 	resp, err := s.client.Do(req)
 	call.Done()
 	if err != nil {
