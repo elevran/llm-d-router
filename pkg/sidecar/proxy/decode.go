@@ -128,7 +128,7 @@ func (s *Server) runChunkedDecodeFromMap(w http.ResponseWriter, r *http.Request,
 	for {
 		if ctx.Err() != nil {
 			if streamingEnabled && chunkIndex > 0 {
-				fmt.Fprintf(w, "%s\n\n", sseDone) //nolint:errcheck
+				fmt.Fprintf(w, "%s\n\n", sseDone)
 				if flusher, ok := w.(http.Flusher); ok {
 					flusher.Flush()
 				}
@@ -261,10 +261,10 @@ func (s *Server) runChunkedDecodeFromMap(w http.ResponseWriter, r *http.Request,
 				responseFieldChoices: []any{},
 			}
 			if data, err := json.Marshal(usageEvent); err == nil {
-				fmt.Fprintf(w, "%s%s\n\n", sseDataPrefix, data) //nolint:errcheck
+				fmt.Fprintf(w, "%s%s\n\n", sseDataPrefix, data)
 			}
 		}
-		fmt.Fprintf(w, "%s\n\n", sseDone) //nolint:errcheck
+		fmt.Fprintf(w, "%s\n\n", sseDone)
 		if flusher, ok := w.(http.Flusher); ok {
 			flusher.Flush()
 		}

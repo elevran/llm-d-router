@@ -188,7 +188,7 @@ func (s *Server) createDecoderProxyHandler(decoderURL *url.URL, decoderInsecureS
 }
 
 func bodyAsJSON(r *http.Request) ([]byte, map[string]any, error) {
-	defer func() { _ = r.Body.Close() }()
+	defer r.Body.Close()
 	raw, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to read request body: %w", err)
@@ -322,12 +322,6 @@ func isRetryableStatus(statusCode int) bool {
 	return statusCode == http.StatusBadGateway ||
 		statusCode == http.StatusServiceUnavailable ||
 		statusCode == http.StatusGatewayTimeout
-}
-
-// CloseBody closes an HTTP response body, discarding the error. Close on a
-// body being drained for a completed request has no recovery action.
-func CloseBody(body io.ReadCloser) {
-	_ = body.Close()
 }
 
 // WriteAll writes b to w, discarding the error. The caller has already sent

@@ -133,11 +133,11 @@ func (s *Server) getMooncakeEngineMap(ctx context.Context, prefillHostPort, boot
 	if err != nil {
 		return nil, fmt.Errorf("failed to get mooncake bootstrap request: %w", err)
 	}
-	resp, err := http.DefaultClient.Do(req) //nolint:bodyclose // bodyclose cannot see the Close call inside CloseBody
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query bootstrap endpoint: %w", err)
 	}
-	defer CloseBody(resp.Body)
+	defer resp.Body.Close()
 
 	if isHTTPError(resp.StatusCode) {
 		return nil, fmt.Errorf("bootstrap endpoint returned status %d", resp.StatusCode)
