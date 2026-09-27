@@ -102,6 +102,48 @@ func TestServe_PlainHTTPWhenNotSecure(t *testing.T) {
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
+// TestServe_BindsAddrBeforeGeneratingSelfSignedCert holds the address open
+// for the server's lifetime rather than only from the point self-signed
+// certificate generation completes. It asserts that a TCP connection
+// succeeds well within the time the RSA-4096 keygen in
+// tlsutil.CreateSelfSignedTLSCertificate takes on its own, which fails if
+// the listener binds only after that keygen.
+func TestServe_BindsAddrBeforeGeneratingSelfSignedCert(t *testing.T) {
+	start := time.Now()
+	baseline, err := tlsutil.CreateSelfSignedTLSCertificate(serverLog)
+	keygenDuration := time.Since(start)
+	require.NoError(t, err)
+	require.NotNil(t, baseline.PrivateKey)
+
+	port, err := fwknet.GetFreePort()
+	require.NoError(t, err)
+	addr := fmt.Sprintf("127.0.0.1:%d", port)
+
+	srv, err := New(config.ServerConfig{SecureServing: true, ListenAddr: addr}, pipeline.New(nil), gateway.NewWithTransport(nil, "http://gateway-stub.invalid"))
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	errCh := make(chan error, 1)
+	go func() { errCh <- srv.ListenAndServe(ctx) }()
+	t.Cleanup(func() {
+		cancel()
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer shutdownCancel()
+		_ = srv.Shutdown(shutdownCtx)
+		require.ErrorIs(t, <-errCh, http.ErrServerClosed)
+	})
+
+	require.Eventually(t, func() bool {
+		conn, err := net.DialTimeout("tcp", addr, 10*time.Millisecond)
+		if err != nil {
+			return false
+		}
+		_ = conn.Close()
+		return true
+	}, keygenDuration/2, 2*time.Millisecond,
+		"listener bound only after certificate generation instead of before it")
+}
+
 func TestServe_SelfSignedTLSWithoutCertPath(t *testing.T) {
 	addr := serve(t, config.ServerConfig{SecureServing: true})
 

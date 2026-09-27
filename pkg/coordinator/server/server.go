@@ -163,30 +163,30 @@ func New(cfg config.ServerConfig, p *pipeline.Pipeline, gwClient *gateway.Client
 	return s, nil
 }
 
-// ListenAndServe binds cfg.ListenAddr and serves until shutdown. With secure
+// ListenAndServe binds cfg.ListenAddr and serves until shutdown. The address
+// is bound before any TLS setup, so it is held for the lifetime of the
+// server rather than only from the point TLS setup completes. With secure
 // serving enabled the listener speaks TLS; ctx bounds the certificate
 // reloader.
 func (s *Server) ListenAndServe(ctx context.Context) error {
-	if !s.secureServing {
-		return s.httpServer.ListenAndServe()
-	}
-	tlsConfig, err := s.listenerTLSConfig(ctx)
+	l, err := net.Listen("tcp", s.httpServer.Addr)
 	if err != nil {
 		return err
 	}
-	s.httpServer.TLSConfig = tlsConfig
-	return s.httpServer.ListenAndServeTLS("", "")
+	return s.Serve(ctx, l)
 }
 
 // Serve accepts on the already bound listener l instead of binding
 // cfg.ListenAddr itself. With secure serving enabled the listener speaks
-// TLS; ctx bounds the certificate reloader.
+// TLS; ctx bounds the certificate reloader. l is closed if TLS setup fails
+// before serving starts.
 func (s *Server) Serve(ctx context.Context, l net.Listener) error {
 	if !s.secureServing {
 		return s.httpServer.Serve(l)
 	}
 	tlsConfig, err := s.listenerTLSConfig(ctx)
 	if err != nil {
+		l.Close()
 		return err
 	}
 	s.httpServer.TLSConfig = tlsConfig
