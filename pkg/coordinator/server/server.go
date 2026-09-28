@@ -178,15 +178,18 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 
 // Serve accepts on the already bound listener l instead of binding
 // cfg.ListenAddr itself. With secure serving enabled the listener speaks
-// TLS; ctx bounds the certificate reloader. l is closed if TLS setup fails
-// before serving starts.
+// TLS; ctx bounds the certificate reloader. l is closed when Serve returns.
 func (s *Server) Serve(ctx context.Context, l net.Listener) error {
 	if !s.secureServing {
 		return s.httpServer.Serve(l)
 	}
+	// http.Server.ServeTLS returns without closing l when its HTTP/2 setup
+	// rejects the configured cipher suites. Every other path closes l inside
+	// http.Server.Serve, so this close is usually the second one and its
+	// error is always net.ErrClosed.
+	defer func() { _ = l.Close() }()
 	tlsConfig, err := s.listenerTLSConfig(ctx)
 	if err != nil {
-		l.Close()
 		return err
 	}
 	s.httpServer.TLSConfig = tlsConfig
