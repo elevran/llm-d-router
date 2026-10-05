@@ -59,9 +59,11 @@ jobs:
       - name: Verify Signed-off-by trailer matches commit author email (DCO)
         run: |
           set -euo pipefail
+          is_merge_group=0
           if [ "${{ github.event_name }}" = "merge_group" ]; then
             base="${{ github.event.merge_group.base_sha }}"
             head="${{ github.event.merge_group.head_sha }}"
+            is_merge_group=1
           else
             base="${{ github.event.pull_request.base.sha }}"
             head="${{ github.event.pull_request.head.sha }}"
@@ -83,6 +85,19 @@ jobs:
               continue
             fi
             match=0
+            # The merge queue squashes a PR into one commit authored as the
+            # merging account; an account with "keep my email private" set
+            # gets a users.noreply.github.com author address there, which
+            # never equals the Signed-off-by email the original per-commit
+            # checks on the PR already verified under pull_request_target.
+            # Only trust this for merge_group: on pull_request_target the
+            # author email comes straight from the contributor's own commit,
+            # so it still has to match the trailer.
+            if [ "$is_merge_group" -eq 1 ]; then
+              case "$author_email" in
+                *@users.noreply.github.com) match=1 ;;
+              esac
+            fi
             while IFS= read -r line; do
               [ -z "$line" ] && continue
               case "$line" in
