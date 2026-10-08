@@ -726,6 +726,7 @@ func TestPrefillStep_CapturesPeerTopologyHeader(t *testing.T) {
 	reqCtx := &pipeline.RequestContext{
 		RequestID:        "req-1",
 		Model:            "test",
+		OriginalPath:     reqcommon.PathVLLMGenerate,
 		TokenIDs:         []int{1, 2345},
 		KVTransferParams: make(map[string]any),
 	}
