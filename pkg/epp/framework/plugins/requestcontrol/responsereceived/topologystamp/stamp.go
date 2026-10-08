@@ -1,5 +1,5 @@
 /*
-Copyright 2026 The Kubernetes Authors.
+Copyright 2026 The llm-d Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,8 +39,8 @@ const PluginType = "topology-stamp-handler"
 
 // defaultHeaderName is the response header the encoded topology is written
 // to, and the header topology-affinity-filter/-scorer read the peer topology
-// from in coordinator deployments. Defaults to reqcommon.PeerTopologyHeaderKey,
-// the single definition gateway.PeerTopologyHeader must match.
+// from in coordinator deployments. Defaults to the coordinator's single
+// hardcoded reqcommon.PeerTopologyHeaderKey.
 const defaultHeaderName = reqcommon.PeerTopologyHeaderKey
 
 type parameters struct {
@@ -127,5 +127,7 @@ func (h *Handler) ResponseHeader(_ context.Context, request *fwksched.InferenceR
 	if !ok {
 		return
 	}
-	response.Headers[h.headerName] = topoutil.Encode(topo)
+	if encoded := topoutil.Encode(topo); encoded != "" {
+		response.Headers[h.headerName] = encoded
+	}
 }

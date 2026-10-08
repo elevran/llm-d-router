@@ -711,7 +711,7 @@ func TestPrefillStep_ConflictingECParams_RejectsRequest(t *testing.T) {
 // into reqCtx.PeerTopology for later forwarding to the decode request.
 func TestPrefillStep_CapturesPeerTopologyHeader(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set(gateway.PeerTopologyHeader, "host=node12,zone=us-east1-a")
+		w.Header().Set(reqcommon.PeerTopologyHeaderKey, "host=node12,zone=us-east1-a")
 		_ = json.NewEncoder(w).Encode(map[string]any{})
 	}))
 	defer server.Close()

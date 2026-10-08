@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	fwkdl "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/datalayer"
 	fwkplugin "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/plugin"
@@ -74,7 +75,7 @@ func Factory(name string, rawParameters *json.Decoder, _ fwkplugin.Handle) (fwkp
 		typedName:          fwkplugin.TypedName{Type: FilterType, Name: name},
 		minAffinity:        minAffinity,
 		dataKey:            attrtopology.TopologyAttributeKey.WithNonEmptyProducerName(params.TopologyProducerName),
-		peerTopologyHeader: params.PeerTopologyHeader,
+		peerTopologyHeader: strings.ToLower(params.PeerTopologyHeader),
 	}, nil
 }
 

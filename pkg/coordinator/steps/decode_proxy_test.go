@@ -30,6 +30,7 @@ import (
 	"github.com/go-logr/logr/funcr"
 	"github.com/stretchr/testify/require"
 
+	reqcommon "github.com/llm-d/llm-d-router/pkg/common/request"
 	"github.com/llm-d/llm-d-router/pkg/coordinator/config"
 	"github.com/llm-d/llm-d-router/pkg/coordinator/gateway"
 	"github.com/llm-d/llm-d-router/pkg/coordinator/pipeline"
@@ -51,7 +52,7 @@ func TestNewDecodeProxyRequest_ForwardsPeerTopology(t *testing.T) {
 	if err != nil {
 		t.Fatalf("newDecodeProxyRequest: %v", err)
 	}
-	if got, want := req.Header.Get(gateway.PeerTopologyHeader), "host=node12,zone=us-east1-a"; got != want {
+	if got, want := req.Header.Get(reqcommon.PeerTopologyHeaderKey), "host=node12,zone=us-east1-a"; got != want {
 		t.Fatalf("x-peer-topology header = %q, want %q", got, want)
 	}
 }
@@ -71,7 +72,7 @@ func TestNewDecodeProxyRequest_OmitsPeerTopologyWhenEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("newDecodeProxyRequest: %v", err)
 	}
-	if got := req.Header.Get(gateway.PeerTopologyHeader); got != "" {
+	if got := req.Header.Get(reqcommon.PeerTopologyHeaderKey); got != "" {
 		t.Fatalf("expected no x-peer-topology header, got %q", got)
 	}
 }

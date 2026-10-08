@@ -17,8 +17,6 @@ limitations under the License.
 package topology
 
 import (
-	"strings"
-
 	fwkdl "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/datalayer"
 	fwkplugin "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/plugin"
 	fwksched "github.com/llm-d/llm-d-router/pkg/epp/framework/interface/scheduling"
@@ -32,7 +30,8 @@ import (
 var PeerEndpointDataKey = disagg.PeerEndpointAttributeKey
 
 // PeerTopology returns the topology of the endpoint selected in the peer
-// scheduling phase, or false when no peer topology is available.
+// scheduling phase, or false when no peer topology is available. headerName
+// must already be lowercased, matching request.Headers' keys.
 //
 // Single-EPP deployments: disagg-profile-handler publishes the peer Endpoint
 // as the disagg.PeerEndpointAttributeKey request attribute before running
@@ -55,7 +54,7 @@ func PeerTopology(request *fwksched.InferenceRequest, dataKey fwkplugin.DataKey,
 	if headerName == "" {
 		return nil, false
 	}
-	header := request.Headers[strings.ToLower(headerName)]
+	header := request.Headers[headerName]
 	if header == "" {
 		return nil, false
 	}
